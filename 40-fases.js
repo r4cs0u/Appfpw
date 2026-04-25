@@ -398,6 +398,7 @@
 
     AF.fases.processarTodas = async function () {
         AF.estado.cancelado = false;
+		AF.estado.rodando = true;
         AF.core.setBotoes(true);
         AF.core.getDocC().getElementById('log-box').innerHTML = '';
 
@@ -520,6 +521,7 @@
 
         AF.core.log('Relatorio pronto para copiar.', '#a3e635');
         AF.core.setBotoes(false);
+		AF.estado.rodando = false;
     };
 
 })();
