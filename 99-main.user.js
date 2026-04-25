@@ -5,12 +5,12 @@
 // @match        https://myway.g.globo/WebPonto/just_user/justuser.asp*
 // @grant        none
 // @run-at       document-idle
-// @require      https://gist.githubusercontent.com/r4cs0u/c3e2899d9799448783125300a1146863/raw/00-core.js
-// @require      https://gist.githubusercontent.com/r4cs0u/c3e2899d9799448783125300a1146863/raw/10-utils.js
-// @require      https://gist.githubusercontent.com/r4cs0u/c3e2899d9799448783125300a1146863/raw/20-mapa.js
-// @require      https://gist.githubusercontent.com/r4cs0u/c3e2899d9799448783125300a1146863/raw/30-popup.js
-// @require      https://gist.githubusercontent.com/r4cs0u/c3e2899d9799448783125300a1146863/raw/40-fases.js
-// @require      https://gist.githubusercontent.com/r4cs0u/c3e2899d9799448783125300a1146863/raw/50-analisar.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/00-core.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/10-utils.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/20-mapa.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/30-popup.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/40-fases.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/50-analisar.js
 // ==/UserScript==
 
 (function () {
