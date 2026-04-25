@@ -272,7 +272,7 @@
 			
 			if (AF.estado.cancelado) return;
 			
-			await AF.popup.aguardarReloadPrincipal();
+			await AF.fases.aguardarGravacao();
 			
 			AF.core.log('Gravado.', '#a6e3a1');
         } catch (e) {
@@ -280,6 +280,34 @@
         }
     };
 
+	AF.fases.aguardarGravacao = async function () {
+    // Camada 1 — espera o frames[1] recarregar (sumir + voltar)
+    var recarregou = await new Promise(function (resolve) {
+        var fase = 'aguardando_sumir';
+        var t = 0;
+        var iv = setInterval(function () {
+            t++;
+            if (t > 40) { clearInterval(iv); resolve(false); return; } // ~12s máximo
+            try {
+                var ir = AF.core.getDoc1().querySelectorAll('input[name^="Irre"]');
+                var tx = AF.core.getDoc1().querySelectorAll('input[type=text]');
+
+                if (fase === 'aguardando_sumir') {
+                    if (ir.length === 0 && tx.length === 0) {
+                        fase = 'aguardando_voltar';
+                    }
+                } else {
+                    if (ir.length > 0 || tx.length > 0 || AF.core.paginaVaziaAgora()) {
+                        clearInterval(iv); resolve(true);
+                    }
+                }
+            } catch (e) {}
+        }, 300);
+    });
+
+    // Camada 2 — 5s de segurança independente do resultado
+    await AF.core.esperar(5000);
+};
     // ── Processar folha atual ──────────────────────────────────────────
 
     AF.fases.processarFolhaAtual = async function (relStats, relLista) {
