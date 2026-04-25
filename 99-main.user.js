@@ -91,5 +91,6 @@
 
         AF.core.log('Pronto para executar.', '#a3e635');
         AF.core.setBotoes(false);
+        AF.core.iniciarKeepAlive(2); // refresh do frame 1 a cada 2 minutos
     });
 })();
