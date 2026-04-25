@@ -173,7 +173,8 @@
 
     AF.analisar.analisarTodas = async function () {
         AF.estado.cancelado = false;
-        AF.core.setBotoes(true);
+        AF.estado.rodando = true;
+		AF.core.setBotoes(true);
         AF.core.getDocC().getElementById('log-box').innerHTML = '';
 
         var alvo = AF.utils.mesAlvoDaTabela
@@ -322,6 +323,7 @@
 		AF.core.log('HE100%: ' + totalHEstr + ' | HEF100%: ' + totalHEFstr, '#89b4fa');
         AF.core.log('Relatorio pronto para copiar.', '#a3e635');
         AF.core.setBotoes(false);
+		AF.estado.rodando = false;
     };
 
 })();
