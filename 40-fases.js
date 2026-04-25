@@ -1,8 +1,18 @@
 (function () {
     'use strict';
 
-    var AF = window.AutomacaoFolha;
+	var AF = window.AutomacaoFolha;
     AF.fases = AF.fases || {};
+
+    // ── Escolhe ausência priorizando domingo ───────────────────────────
+
+    function escolherAusenciaDestino(ausencias, usadas) {
+        var disponiveis = ausencias.filter(function(a) {
+            return !usadas || !usadas.has(a.dataStr);
+        });
+        var domingo = disponiveis.filter(function(a) { return a.dataObj.getDay() === 0; })[0];
+        return domingo || disponiveis[0] || null;
+    }
 
     // ── Análise da folha atual ──────────────────────────────────────────
 
@@ -46,8 +56,8 @@
             for (var j = 0; j < semana.folgas.length; j++) {
                 var folga = semana.folgas[j];
                 if (semana.ausencias.length > 0) {
-                    var aus = semana.ausencias[0];
-                    acoes.push({
+					var aus = escolherAusenciaDestino(semana.ausencias, null);
+	                acoes.push({
                         fase: 1, tipo: 'folga_mes',
                         semanaId: semKey,
                         numAbrirPopup: aus.num,
@@ -93,10 +103,7 @@
         if (!ausencias.length) return { acabou: true, motivo: 'sem_ausencia_no_mes' };
 
         var usadas = datasUsadasFase2 || new Set();
-        var ausenciaDestino = null;
-        for (var a = 0; a < ausencias.length; a++) {
-            if (!usadas.has(ausencias[a].dataStr)) { ausenciaDestino = ausencias[a]; break; }
-        }
+		var ausenciaDestino = escolherAusenciaDestino(ausencias, usadas);
         if (!ausenciaDestino) return { acabou: true, motivo: 'sem_ausencia_disponivel' };
 
         var chaveBase = ausenciaDestino.dataStr + '|';
