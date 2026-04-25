@@ -262,30 +262,13 @@
 
     // ── Gravar ─────────────────────────────────────────────────────────
 
-    AF.fases.gravar = async function (nsMarcados) {
-        try {
-            var mainFrame = window.top.frames[1];
-            var form = mainFrame.document.forms['myForm'];
-            if (!form) { AF.core.log('ERRO: formulario nao encontrado.', '#f87171'); return; }
-
-            var totRegs = parseInt(form.hidTotRegs ? form.hidTotRegs.value : '0', 10);
-
-            for (var idx = 0; idx < nsMarcados.length; idx++) {
-                var n = nsMarcados[idx];
-                for (var campo = 1; campo <= 10; campo++) {
-                    try {
-                        var f = form['EPJust' + campo + '_' + n];
-                        if (f) { f.value = '48'; }
-                    } catch (e) {}
-                }
-            }
-
-            if (form.hidAcao) form.hidAcao.value = 'G';
-            if (form.hidTotRegsGravar) form.hidTotRegsGravar.value = totRegs;
-
-            mainFrame.document.getElementById('btnGravar') ?
-                mainFrame.document.getElementById('btnGravar').click() :
-                form.submit();
+	AF.fases.gravar = async function (nsMarcados) {
+	    try {
+	        var doc2 = window.top.frames[2].document;
+	        var btn = doc2.getElementById('btnGravar');
+	        if (!btn) { AF.core.log('ERRO: btnGravar nao encontrado em frames[2].', '#f87171'); return; }
+	
+	        btn.click();
 
             if (AF.estado.cancelado) return;
 
