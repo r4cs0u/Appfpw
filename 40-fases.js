@@ -53,22 +53,25 @@
             var semana = mapa.semanas[semKey];
             if (!semana.folgas.length) continue;
 
-            for (var j = 0; j < semana.folgas.length; j++) {
-                var folga = semana.folgas[j];
-                if (semana.ausencias.length > 0) {
-					var aus = escolherAusenciaDestino(semana.ausencias, null);
+			var datasFolgaVistas = {};
+	        for (var j = 0; j < semana.folgas.length; j++) {
+	            var folga = semana.folgas[j];
+	            if (datasFolgaVistas[folga.dataStr]) continue;
+	            datasFolgaVistas[folga.dataStr] = true;
+	            if (semana.ausencias.length > 0) {
+	                var aus = escolherAusenciaDestino(semana.ausencias, null);
 	                acoes.push({
-                        fase: 1, tipo: 'folga_mes',
-                        semanaId: semKey,
-                        numAbrirPopup: aus.num,
-                        dataAusencia: aus.dataStr,
-                        dataOrigem: folga.dataStr,
-                        candidatos: [folga.dataStr]
-                    });
-                } else {
-                    presas.push({ fase: 1, semanaId: semKey, dataFolga: folga.dataStr });
-                }
-            }
+	                    fase: 1, tipo: 'folga_mes',
+	                    semanaId: semKey,
+	                    numAbrirPopup: aus.num,
+	                    dataAusencia: aus.dataStr,
+	                    dataOrigem: folga.dataStr,
+	                    candidatos: [folga.dataStr]
+	                });
+	            } else {
+	                presas.push({ fase: 1, semanaId: semKey, dataFolga: folga.dataStr });
+	            }
+	        }
         }
         return { acoes: acoes, presas: presas };
     };
