@@ -268,26 +268,13 @@
 	        var btn = doc2.getElementById('btnGravar');
 	        if (!btn) { AF.core.log('ERRO: btnGravar nao encontrado em frames[2].', '#f87171'); return; }
 	
-	        btn.click();
-
-            if (AF.estado.cancelado) return;
-
-            await new Promise(function (resolve) {
-                var t = 0;
-                var iv = setInterval(function () {
-                    t++;
-                    if (t > 60) { clearInterval(iv); resolve(); return; }
-                    try {
-                        var ir = AF.core.getDoc1().querySelectorAll('input[name^="Irre"]');
-                        var tx = AF.core.getDoc1().querySelectorAll('input[type=text]');
-                        if (ir.length > 0 || tx.length > 0 || AF.core.paginaVaziaAgora()) {
-                            clearInterval(iv); resolve();
-                        }
-                    } catch (e) {}
-                }, 300);
-            });
-
-            AF.core.log('Gravado.', '#a6e3a1');
+			btn.click();
+			
+			if (AF.estado.cancelado) return;
+			
+			await AF.popup.aguardarReloadPrincipal();
+			
+			AF.core.log('Gravado.', '#a6e3a1');
         } catch (e) {
             AF.core.log('ERRO ao gravar: ' + e.message, '#f87171');
         }
@@ -333,29 +320,14 @@
         var nsMarcados = AF.fases.alterar47para48();
         var linhas47 = nsMarcados.length;
 
-        if (linhas47 > 0) {
-            AF.core.log('Gravando linhas 47>48...', '#89b4fa');
-            await AF.fases.gravar(nsMarcados);
-        } else {
-            AF.core.log('Nada a gravar.', '#4b5563');
-        }
-
-        if (AF.estado.cancelado) return;
-
-        await new Promise(function (resolve) {
-            var t = 0;
-            var iv = setInterval(function () {
-                t++;
-                if (t > 40) { clearInterval(iv); resolve(); return; }
-                try {
-                    var tx = AF.core.getDoc1().querySelectorAll('input[type=text]');
-                    var ir = AF.core.getDoc1().querySelectorAll('input[name^="Irre"]');
-                    if (tx.length > 0 || ir.length > 0 || AF.core.paginaVaziaAgora()) {
-                        clearInterval(iv); resolve();
-                    }
-                } catch (e) {}
-            }, 500);
-        });
+		if (linhas47 > 0) {
+		    AF.core.log('Gravando linhas 47>48...', '#89b4fa');
+		    await AF.fases.gravar(nsMarcados);
+		} else {
+		    AF.core.log('Nada a gravar.', '#4b5563');
+		}
+		
+		if (AF.estado.cancelado) return;
 
         var analise  = AF.fases.analisarFolha();
         var extras   = (AF.analisar && AF.analisar.somarHorasExtras) ? AF.analisar.somarHorasExtras() : { HE: '00:00', HEF: '00:00' };
