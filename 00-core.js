@@ -1,6 +1,8 @@
 window.AutomacaoFolha = window.AutomacaoFolha || {
     estado: {
         cancelado: false,
+        rodando: false,
+        keepAliveTimer: null,
         ultimoPopup: null,
         relatorio: '',
         textoCopiavel: '',
@@ -216,7 +218,25 @@ window.AutomacaoFolha = window.AutomacaoFolha || {
                 };
             })(framesToWatch[fi]);
         }
-
+        
+        AF.core.iniciarKeepAlive = function (minutos) {
+            minutos = minutos || 2;
+            AF.core.pararKeepAlive();
+            AF.estado.keepAliveTimer = setInterval(function () {
+                if (AF.estado.rodando) return;
+                try {
+                    window.top.frames[1].location.reload();
+                } catch (e) {}
+            }, minutos * 60 * 1000);
+        };
+        
+        AF.core.pararKeepAlive = function () {
+            if (AF.estado.keepAliveTimer) {
+                clearInterval(AF.estado.keepAliveTimer);
+                AF.estado.keepAliveTimer = null;
+            }
+        };
+                
         // Mantém compatibilidade com winOpenOriginal legado
         if (!AF.estado.winOpenOriginal && window.top.frames[0] && window.top.frames[0].window) {
             AF.estado.winOpenOriginal = window.top.frames[0].window.open;
