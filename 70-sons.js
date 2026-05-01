@@ -43,9 +43,10 @@
 
     // ── Sequência de beeps ─────────────────────────────────────────────
     // notas: array de { freq, dur, vol, forma, delay }
+    // offsetMs: atraso inicial opcional em ms antes de começar a sequência
 
-    function sequencia(notas) {
-        var acumulado = 0;
+    function sequencia(notas, offsetMs) {
+        var acumulado = (offsetMs || 0) / 1000;
         for (var i = 0; i < notas.length; i++) {
             (function (nota, offset) {
                 setTimeout(function () {
@@ -63,18 +64,20 @@
         // Início de qualquer processo — dois bipes ascendentes
         inicio: function () {
             sequencia([
-                { freq: 600,  dur: 0.15, delay: 0.18 },
-                { freq: 900,  dur: 0.20 }
+                { freq: 600, dur: 0.15, delay: 0.18 },
+                { freq: 900, dur: 0.20 }
             ]);
         },
 
-        // Fim bem-sucedido — três notas ascendentes (jingle positivo)
+        // Fim bem-sucedido — jingle positivo Dó-Mi-Sol
+        // offsetMs: 800ms de espera para não colidir com o som de 'copia'
+        // que é disparado logo antes por habilitarCopiar()
         fim: function () {
             sequencia([
-                { freq: 523,  dur: 0.12, delay: 0.14 },   // Dó
-                { freq: 659,  dur: 0.12, delay: 0.14 },   // Mi
-                { freq: 784,  dur: 0.25 }                 // Sol
-            ]);
+                { freq: 523, dur: 0.12, delay: 0.14 },   // Dó
+                { freq: 659, dur: 0.12, delay: 0.14 },   // Mi
+                { freq: 784, dur: 0.25 }                 // Sol
+            ], 800);
         },
 
         // Relatório pronto para copiar — clique duplo suave
@@ -85,11 +88,11 @@
             ]);
         },
 
-        // Parada pelo usuário — bipe descendente + longo
+        // Parada pelo usuário — bipe descendente suave (700Hz → 550Hz)
         parada: function () {
             sequencia([
-                { freq: 700,  dur: 0.15, delay: 0.18 },
-                { freq: 400,  dur: 0.40, vol: 0.3, forma: 'square' }
+                { freq: 700, dur: 0.15, delay: 0.18 },
+                { freq: 550, dur: 0.40, vol: 0.25, forma: 'sine' }
             ]);
         }
     };
