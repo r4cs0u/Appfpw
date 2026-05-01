@@ -32,7 +32,7 @@
         return total;
     };
 
-    // ── Conta irregularidades ──────────────────────────────────────────
+    // ── Conta irregularidades ─────────────────────────────────────────
 
     AF.analisar.contarIrregs = function () {
         var inputs = Array.from(AF.core.getDoc1().querySelectorAll('input[name^="Irre"]'));
@@ -53,7 +53,7 @@
         return { marc: marc, he: he, smES: smES, total: marc + he + smES };
     };
 
-    // ── Conta interjornadas ────────────────────────────────────────────
+    // ── Conta interjornadas ───────────────────────────────────────────
 
     AF.analisar.contarInterj = function () {
         var alvo = AF.utils.mesAlvoDaTabela();
@@ -90,7 +90,7 @@
         return count;
     };
 
-    // ── Soma HE (cod 2) e HEF (cod 27) ────────────────────────────────
+    // ── Soma HE (cod 2) e HEF (cod 27) ──────────────────────────────────
 
     AF.analisar.somarHorasExtras = function () {
         try {
@@ -125,7 +125,7 @@
         }
     };
 
-    // ── Lê saldo de compensação (frame 2, txtSaldo) ────────────────────
+    // ── Lê saldo de compensação (frame 2, txtSaldo) ─────────────────────
 
     AF.analisar.lerSaldoHEC = function () {
         try {
@@ -144,7 +144,7 @@
         }
     };
 
-    // ── Análise completa de uma folha ─────────────────────────────────
+    // ── Análise completa de uma folha ────────────────────────────────────
 
     AF.analisar.analisarFolhaAtual = function () {
         if (AF.core.paginaVaziaAgora()) {
@@ -176,6 +176,7 @@
         AF.estado.rodando = true;
 		AF.core.setBotoes(true);
         AF.core.getDocC().getElementById('log-box').innerHTML = '';
+        AF.sons.tocar('inicio');
 
         var alvo = AF.utils.mesAlvoDaTabela
             ? (function () {
@@ -267,6 +268,8 @@
 
         var tempoMs = Date.now() - inicioExec;
         AF.relatorios.gerarAnalise(stats, lista, nomeMesStr, tempoMs, AF.estado.cancelado);
+
+        if (!AF.estado.cancelado) AF.sons.tocar('fim');
 
         AF.core.setBotoes(false);
 		AF.estado.rodando = false;
