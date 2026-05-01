@@ -234,8 +234,8 @@
                 if (temAlgo) {
                     var partes = [];
                     if (r.folgas)          partes.push('Folgas:' + r.folgas);
-                    if (r.irregs)          partes.push('Irreg:'  + r.irregs);
-                    if (r.interj)          partes.push('Interj:' + r.interj);
+                    partes.push('Irreg:'  + r.irregs);
+                    partes.push('Interj:' + r.interj);
                     if (r.cod47)           partes.push('Cod47:'  + r.cod47);
 					if (r.HE  !== '00:00') partes.push('HE100%:'  + r.HE);
 					if (r.HEF !== '00:00') partes.push('HEF100%:' + r.HEF);
@@ -298,12 +298,12 @@
 
             var p = [];
             if (re.folgas)          p.push('Folgas:' + re.folgas);
-            if (re.irregs)          p.push('Irreg:'  + re.irregs);
-            if (re.interj)          p.push('Interj:' + re.interj);
+            p.push('Irreg:'  + re.irregs);
+            p.push('Interj:' + re.interj);
             if (re.cod47)           p.push('Cod47:'  + re.cod47);
-            if (re.HE  !== '00:00') p.push('HE:'     + re.HE);
-            if (re.HEF !== '00:00') p.push('HEF:'    + re.HEF);
-            if (re.HEC !== '00:00') p.push('HEC:'    + re.HEC);
+            if (re.HE  !== '00:00') p.push('HE100%:'  + re.HE);
+            if (re.HEF !== '00:00') p.push('HEF100%:' + re.HEF);
+            if (re.HEC !== '00:00') p.push('HEC70%:'  + re.HEC);
 
             rel += re.nome + ' | ' + p.join(' | ') + '\n';
         }
