@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Automacao Folha de Ponto
 // @namespace    http://tampermonkey.net/
-// @version      8.2
+// @version      8.3
 // @match        https://myway.g.globo/WebPonto/just_user/justuser.asp*
 // @grant        none
 // @run-at       document-idle
@@ -11,6 +11,7 @@
 // @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/30-popup.js
 // @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/40-fases.js
 // @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/50-analisar.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/60-relatorios.js
 // ==/UserScript==
 
 (function () {
@@ -91,6 +92,6 @@
 
         AF.core.log('Pronto para executar.', '#a3e635');
         AF.core.setBotoes(false);
-        AF.core.iniciarKeepAlive(2); // refresh do frame 1 a cada 2 minutos
+        AF.core.iniciarKeepAlive(2);
     });
 })();

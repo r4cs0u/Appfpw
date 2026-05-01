@@ -265,63 +265,9 @@
             if (AF.core.nomeAtual() === nomeInicial) { AF.core.log('Concluido.', '#a3e635'); break; }
         }
 
-        var tempoTotal = Math.round((Date.now() - inicioExec) / 1000);
-        var min = Math.floor(tempoTotal / 60);
-        var seg = tempoTotal % 60;
+        var tempoMs = Date.now() - inicioExec;
+        AF.relatorios.gerarAnalise(stats, lista, nomeMesStr, tempoMs, AF.estado.cancelado);
 
-        function fmtMin(t) {
-            return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
-        }
-
-        var totalHEstr  = fmtMin(stats.HEmin);
-        var totalHEFstr = fmtMin(stats.HEFmin);
-
-        // ── Relatório ─────────────────────────────────────────────────
-        var rel = 'RELATORIO DE ANALISE - ' + nomeMesStr + '\n';
-        rel += 'Status: '               + (AF.estado.cancelado ? 'INTERROMPIDO' : 'CONCLUIDO') + '\n';
-        rel += 'Gerado em: '            + new Date().toLocaleString('pt-BR') + '\n';
-        rel += 'Tempo total: '          + min + 'min ' + seg + 's\n';
-        rel += 'Folhas analisadas: '    + total + '\n';
-        rel += 'Folhas sem marcacoes: ' + stats.vazias + '\n';
-        rel += 'Folgas a movimentar: '  + stats.folgasMoviveis + '\n';
-        rel += 'Irregularidades: '      + stats.irregs + '\n';
-        rel += 'Interjornadas: '        + stats.interj + '\n';
-        rel += 'Codigos 47: '           + stats.cod47 + '\n';
-		rel += 'Total HE100%: '  + totalHEstr + '\n';
-		rel += 'Total HEF100%: ' + totalHEFstr + '\n\n';
-
-        for (var ri = 0; ri < lista.length; ri++) {
-            var re = lista[ri];
-            var temAlgoRel = re.folgas || re.irregs || re.interj || re.cod47 ||
-                             re.HE !== '00:00' || re.HEF !== '00:00';
-            if (!temAlgoRel) continue;
-
-            var p = [];
-            if (re.folgas)          p.push('Folgas:' + re.folgas);
-            p.push('Irreg:'  + re.irregs);
-            p.push('Interj:' + re.interj);
-            if (re.cod47)           p.push('Cod47:'  + re.cod47);
-            if (re.HE  !== '00:00') p.push('HE100%:'  + re.HE);
-            if (re.HEF !== '00:00') p.push('HEF100%:' + re.HEF);
-            if (re.HEC !== '00:00') p.push('HEC70%:'  + re.HEC);
-
-            rel += re.nome + ' | ' + p.join(' | ') + '\n';
-        }
-
-        AF.estado.relatorio     = rel;
-        AF.estado.textoCopiavel = rel.replace(/\n/g, '\r\n');
-
-        try {
-            var btnCopiar = AF.core.getDocC().getElementById('btn-copiar');
-            if (btnCopiar) { btnCopiar.disabled = false; btnCopiar.title = 'Copiar relatorio de analise'; }
-        } catch (e) {}
-
-        AF.core.log('──────────────────', '#374151');
-        AF.core.log('ANALISE CONCLUIDA', '#f9fafb');
-        AF.core.log('Tempo: ' + min + 'min ' + seg + 's', '#89b4fa');
-        AF.core.log('Folhas: ' + total + ' | Folgas: ' + stats.folgasMoviveis + ' | Irreg: ' + stats.irregs + ' | Interj: ' + stats.interj + ' | Cod47: ' + stats.cod47, '#89b4fa');
-		AF.core.log('HE100%: ' + totalHEstr + ' | HEF100%: ' + totalHEFstr, '#89b4fa');
-        AF.core.log('Relatorio pronto para copiar.', '#a3e635');
         AF.core.setBotoes(false);
 		AF.estado.rodando = false;
     };

@@ -291,13 +291,12 @@
     };
 
 	AF.fases.aguardarGravacao = async function () {
-    // Camada 1 — espera o frames[1] recarregar (sumir + voltar)
     var recarregou = await new Promise(function (resolve) {
         var fase = 'aguardando_sumir';
         var t = 0;
         var iv = setInterval(function () {
             t++;
-            if (t > 40) { clearInterval(iv); resolve(false); return; } // ~12s máximo
+            if (t > 40) { clearInterval(iv); resolve(false); return; }
             try {
                 var ir = AF.core.getDoc1().querySelectorAll('input[name^="Irre"]');
                 var tx = AF.core.getDoc1().querySelectorAll('input[type=text]');
@@ -315,9 +314,9 @@
         }, 300);
     });
 
-    // Camada 2 — 5s de segurança independente do resultado
     await AF.core.esperar(5000);
 };
+
     // ── Processar folha atual ──────────────────────────────────────────
 
     AF.fases.processarFolhaAtual = async function (relStats, relLista) {
@@ -379,16 +378,16 @@
         relStats.linhas47           += linhas47;
 
         relLista.push({
-            nome:              nome,
-            folgasAlteradas:   totalMovidas,
+            nome:               nome,
+            folgasAlteradas:    totalMovidas,
             folgasSemAlteracao: presasFinais.length,
-            linhas47:          linhas47,
-            irregs:            analise.marc + analise.he + analise.smES,
-            interj:            analise.interj,
-            HE:                extras.HE,
-            HEF:               extras.HEF,
-            HEC:               saldoHEC,
-            pulada:            false
+            linhas47:           linhas47,
+            irregs:             analise.marc + analise.he + analise.smES,
+            interj:             analise.interj,
+            HE:                 extras.HE,
+            HEF:                extras.HEF,
+            HEC:                saldoHEC,
+            pulada:             false
         });
 
         AF.core.log('Folha concluida | Folgas: ' + totalMovidas + ' | Presas: ' + presasFinais.length + ' | 47>48: ' + linhas47 + ' | HE100%: ' + extras.HE + ' | HEF100%: ' + extras.HEF + ' | HEC70%: ' + saldoHEC, '#a6e3a1');
@@ -467,59 +466,9 @@
             if (AF.core.nomeAtual() === nomeInicial) { AF.core.log('Concluido.', '#a3e635'); break; }
         }
 
-        var tempoTotal = Math.round((Date.now() - inicioExec) / 1000);
-        var minutos = Math.floor(tempoTotal / 60);
-        var segundos = tempoTotal % 60;
+        var tempoMs = Date.now() - inicioExec;
+        AF.relatorios.gerarFolgas(relStats, relLista, tempoMs, AF.estado.cancelado);
 
-        var relFinal = 'RELATORIO FINAL DE EXECUCAO\n';
-        relFinal += 'Status: '                  + (AF.estado.cancelado ? 'INTERROMPIDO' : 'CONCLUIDO') + '\n';
-        relFinal += 'Gerado em: '               + new Date().toLocaleString('pt-BR') + '\n';
-        relFinal += 'Tempo total: '             + minutos + 'min ' + segundos + 's\n';
-        relFinal += 'Folhas processadas: '      + relStats.totalFolhas + '\n';
-        relFinal += 'Folhas sem marcacoes: '    + relStats.semMarcacoes + '\n';
-        relFinal += 'Folgas alteradas: '        + relStats.folgasAlteradas + '\n';
-        relFinal += 'Folgas nao alteradas: '    + relStats.folgasNaoAlteradas + '\n';
-        relFinal += 'Linhas 47>48: '            + relStats.linhas47 + '\n';
-        relFinal += 'Irregularidades restantes: ' + relStats.irregsRestantes + '\n';
-        relFinal += 'Interjornadas restantes: ' + relStats.interjRestantes + '\n\n';
-
-        AF.core.log('──────────────────', '#374151');
-        AF.core.log('RELATORIO DE EXECUCAO', '#f9fafb');
-        AF.core.log('Tempo: ' + minutos + 'min ' + segundos + 's', '#89b4fa');
-        AF.core.log('Folhas: ' + relStats.totalFolhas + ' | Folgas: ' + relStats.folgasAlteradas + ' | 47>48: ' + relStats.linhas47, '#89b4fa');
-        AF.core.log('Irregs restantes: ' + relStats.irregsRestantes + ' | Interj: ' + relStats.interjRestantes, '#89b4fa');
-        AF.core.log('──────────────────', '#374151');
-
-        for (var ri = 0; ri < relLista.length; ri++) {
-            var re = relLista[ri];
-            if (re.pulada) continue;
-            var temAlgo = re.folgasAlteradas || re.folgasSemAlteracao || re.linhas47 ||
-                          re.irregs || re.interj || re.HE !== '00:00' || re.HEF !== '00:00';
-            if (!temAlgo) continue;
-
-            var partes = [];
-            partes.push('Folgas:' + re.folgasAlteradas);
-            partes.push('Presas:' + re.folgasSemAlteracao);
-            partes.push('47>48:'  + re.linhas47);
-            partes.push('Irreg:'  + re.irregs);
-            partes.push('Interj:' + re.interj);
-			if (re.HE  !== '00:00') partes.push('HE100%:'  + re.HE);
-			if (re.HEF !== '00:00') partes.push('HEF100%:' + re.HEF);
-			partes.push('HEC70%:' + re.HEC);
-
-            relFinal += re.nome + ' | ' + partes.join(' | ') + '\n';
-            AF.core.log(re.nome + ' | ' + partes.join(' | '), '#facc15');
-        }
-
-        AF.estado.relatorio     = relFinal;
-        AF.estado.textoCopiavel = relFinal.replace(/\n/g, '\r\n');
-
-        try {
-            var btnCopiar = AF.core.getDocC().getElementById('btn-copiar');
-            if (btnCopiar) { btnCopiar.disabled = false; btnCopiar.title = 'Copiar relatorio final'; }
-        } catch (e) {}
-
-        AF.core.log('Relatorio pronto para copiar.', '#a3e635');
         AF.core.setBotoes(false);
 		AF.estado.rodando = false;
     };
