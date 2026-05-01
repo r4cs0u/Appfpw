@@ -16,6 +16,7 @@
         try {
             var btn = AF.core.getDocC().getElementById('btn-copiar');
             if (btn) { btn.disabled = false; btn.title = titulo || 'Copiar relatorio'; }
+            AF.sons.tocar('copia');
         } catch (e) {}
     };
 

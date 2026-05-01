@@ -400,6 +400,7 @@
 		AF.estado.rodando = true;
         AF.core.setBotoes(true);
         AF.core.getDocC().getElementById('log-box').innerHTML = '';
+        AF.sons.tocar('inicio');
 
         AF.core.instalarInterceptorPopup();
 
@@ -468,6 +469,8 @@
 
         var tempoMs = Date.now() - inicioExec;
         AF.relatorios.gerarFolgas(relStats, relLista, tempoMs, AF.estado.cancelado);
+
+        if (!AF.estado.cancelado) AF.sons.tocar('fim');
 
         AF.core.setBotoes(false);
 		AF.estado.rodando = false;
