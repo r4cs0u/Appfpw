@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Automacao Folha de Ponto
 // @namespace    http://tampermonkey.net/
-// @version      8.3
+// @version      8.4
 // @match        https://myway.g.globo/WebPonto/just_user/justuser.asp*
 // @grant        none
 // @run-at       document-idle
@@ -12,6 +12,7 @@
 // @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/40-fases.js
 // @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/50-analisar.js
 // @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/60-relatorios.js
+// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/70-sons.js
 // ==/UserScript==
 
 (function () {
@@ -77,6 +78,7 @@
             sessionStorage.removeItem('autodataFallback');
             sessionStorage.removeItem('autodatasCandidatasPopup');
             sessionStorage.removeItem('autopopupSemSucesso');
+            AF.sons.tocar('parada');
             AF.core.log('PARADO pelo usuario.', '#f87171');
             AF.core.setBotoes(false);
         };
@@ -84,6 +86,7 @@
         docC.getElementById('btn-copiar').onclick = function () {
             if (!AF.estado.textoCopiavel) return;
             navigator.clipboard.writeText(AF.estado.textoCopiavel).then(function () {
+                AF.sons.tocar('copia');
                 AF.core.log('Relatorio copiado!', '#a3e635');
             }).catch(function () {
                 AF.core.log('Erro ao copiar.', '#f87171');
