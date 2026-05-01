@@ -69,23 +69,23 @@
             ]);
         },
 
-        // Fim bem-sucedido — jingle positivo Dó-Mi-Sol
-        // offsetMs: 800ms de espera para não colidir com o som de 'copia'
-        // que é disparado logo antes por habilitarCopiar()
+        // Fim bem-sucedido — jingle positivo Dó-Mi-Sol (toca imediatamente)
         fim: function () {
             sequencia([
                 { freq: 523, dur: 0.12, delay: 0.14 },   // Dó
                 { freq: 659, dur: 0.12, delay: 0.14 },   // Mi
                 { freq: 784, dur: 0.25 }                 // Sol
-            ], 800);
+            ]);
         },
 
         // Relatório pronto para copiar — clique duplo suave
+        // offsetMs: 900ms para aguardar o jingle de 'fim' terminar (~650ms)
+        // antes de tocar, evitando sobreposição quando os dois são disparados em sequência
         copia: function () {
             sequencia([
                 { freq: 1000, dur: 0.08, vol: 0.2, delay: 0.12 },
                 { freq: 1000, dur: 0.08, vol: 0.2 }
-            ]);
+            ], 900);
         },
 
         // Parada pelo usuário — bipe descendente suave (700Hz → 550Hz)
