@@ -1,24 +1,52 @@
 // ==UserScript==
 // @name         Automacao Folha de Ponto
 // @namespace    http://tampermonkey.net/
-// @version      8.5
+// @version      9.0
 // @match        https://myway.g.globo/WebPonto/just_user/justuser.asp*
-// @grant        none
+// @grant        GM_xmlhttpRequest
+// @connect      raw.githubusercontent.com
 // @run-at       document-idle
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/00-core.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/10-utils.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/20-mapa.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/30-popup.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/40-fases.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/50-analisar.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/60-relatorios.js?v=20260504
-// @require      https://raw.githubusercontent.com/r4cs0u/Appfpw/main/70-sons.js?v=20260504
 // ==/UserScript==
 
 (function () {
     'use strict';
 
-    var AF = window.AutomacaoFolha;
+    var BASE = 'https://raw.githubusercontent.com/r4cs0u/Appfpw/main/';
+    var MODULOS = [
+        '00-core.js',
+        '10-utils.js',
+        '20-mapa.js',
+        '30-popup.js',
+        '40-fases.js',
+        '50-analisar.js',
+        '60-relatorios.js',
+        '70-sons.js'
+    ];
+
+    function carregarModulo(arquivo) {
+        return new Promise(function (resolve, reject) {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url: BASE + arquivo + '?_=' + Date.now(),
+                nocache: true,
+                onload: function (r) {
+                    if (r.status === 200) {
+                        try { eval(r.responseText); resolve(); }
+                        catch (e) { reject('Erro ao executar ' + arquivo + ': ' + e); }
+                    } else {
+                        reject('Falha HTTP ' + r.status + ' em ' + arquivo);
+                    }
+                },
+                onerror: function (e) { reject('Erro de rede em ' + arquivo + ': ' + JSON.stringify(e)); }
+            });
+        });
+    }
+
+    async function carregarTodos() {
+        for (var i = 0; i < MODULOS.length; i++) {
+            await carregarModulo(MODULOS[i]);
+        }
+    }
 
     function esperarCabecalho(callback) {
         var tent = 0;
@@ -37,63 +65,72 @@
         }, 500);
     }
 
-    esperarCabecalho(function (cabec, docC, selNome) {
-        var antigo = docC.getElementById('painel-simples');
-        if (antigo) antigo.parentNode.removeChild(antigo);
+    carregarTodos().then(function () {
 
-        var painel = docC.createElement('div');
-        painel.id = 'painel-simples';
-        painel.style.cssText = 'position:fixed;top:4px;right:6px;z-index:999999;background:#111827;color:#f9fafb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.5);font-family:Arial,sans-serif;font-size:11px;width:320px;height:200px;border:1px solid #374151;overflow:hidden;display:flex;flex-direction:column;';
+        var AF = window.AutomacaoFolha;
 
-        painel.innerHTML =
-            '<div style="background:#1f2937;padding:3px 8px;font-weight:bold;font-size:11px;border-bottom:1px solid #374151;text-align:center;flex-shrink:0;">Folha de Ponto - Automacao</div>' +
-            '<div style="display:flex;flex:1;overflow:hidden;">' +
-            '<div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:5px 4px;border-right:1px solid #374151;background:#1a2233;min-width:38px;align-items:center;flex-shrink:0;">' +
-            '<button id="btn-analisar" title="Analisar mes alvo" style="width:28px;height:28px;border:0;border-radius:6px;background:#2563eb;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;">&#128269;</button>' +
-            '<button id="btn-executar" title="Folgas + Gravar" style="width:28px;height:28px;border:0;border-radius:6px;background:#7c3aed;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;">&#9881;&#65039;</button>' +
-            '<button id="btn-copiar" title="Copiar relatorio" style="width:28px;height:28px;border:0;border-radius:6px;background:#16a34a;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;" disabled>&#128203;</button>' +
-            '<div style="width:24px;height:1px;background:#374151;"></div>' +
-            '<button id="btn-parar" title="Parar execucao" style="width:28px;height:28px;border:0;border-radius:6px;background:#1f2937;border:1px solid #dc2626;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;" disabled>&#128721;</button>' +
-            '</div>' +
-            '<div id="log-box" style="flex:1;padding:5px 7px;overflow-y:auto;line-height:1.5;font-size:11px;color:#9ca3af;background:#0b1220;">Aguardando...</div>' +
-            '</div>';
+        esperarCabecalho(function (cabec, docC, selNome) {
+            var antigo = docC.getElementById('painel-simples');
+            if (antigo) antigo.parentNode.removeChild(antigo);
 
-        docC.body.appendChild(painel);
+            var painel = docC.createElement('div');
+            painel.id = 'painel-simples';
+            painel.style.cssText = 'position:fixed;top:4px;right:6px;z-index:999999;background:#111827;color:#f9fafb;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.5);font-family:Arial,sans-serif;font-size:11px;width:320px;height:200px;border:1px solid #374151;overflow:hidden;display:flex;flex-direction:column;';
 
-        docC.getElementById('btn-analisar').onclick = async function () {
-            AF.estado.cancelado = false;
-            docC.getElementById('log-box').innerHTML = '';
-            await AF.analisar.analisarTodas();
-        };
+            painel.innerHTML =
+                '<div style="background:#1f2937;padding:3px 8px;font-weight:bold;font-size:11px;border-bottom:1px solid #374151;text-align:center;flex-shrink:0;">Folha de Ponto - Automacao</div>' +
+                '<div style="display:flex;flex:1;overflow:hidden;">' +
+                '<div style="display:flex;flex-direction:column;justify-content:center;gap:4px;padding:5px 4px;border-right:1px solid #374151;background:#1a2233;min-width:38px;align-items:center;flex-shrink:0;">' +
+                '<button id="btn-analisar" title="Analisar mes alvo" style="width:28px;height:28px;border:0;border-radius:6px;background:#2563eb;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;">&#128269;</button>' +
+                '<button id="btn-executar" title="Folgas + Gravar" style="width:28px;height:28px;border:0;border-radius:6px;background:#7c3aed;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;">&#9881;&#65039;</button>' +
+                '<button id="btn-copiar" title="Copiar relatorio" style="width:28px;height:28px;border:0;border-radius:6px;background:#16a34a;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;" disabled>&#128203;</button>' +
+                '<div style="width:24px;height:1px;background:#374151;"></div>' +
+                '<button id="btn-parar" title="Parar execucao" style="width:28px;height:28px;border:0;border-radius:6px;background:#1f2937;border:1px solid #dc2626;color:white;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1;" disabled>&#128721;</button>' +
+                '</div>' +
+                '<div id="log-box" style="flex:1;padding:5px 7px;overflow-y:auto;line-height:1.5;font-size:11px;color:#9ca3af;background:#0b1220;">Aguardando...</div>' +
+                '</div>';
 
-        docC.getElementById('btn-executar').onclick = async function () {
-            AF.estado.cancelado = false;
-            docC.getElementById('log-box').innerHTML = '';
-            await AF.fases.processarTodas(docC);
-        };
+            docC.body.appendChild(painel);
 
-        docC.getElementById('btn-parar').onclick = function () {
-            AF.core.cancelarTudo();
-            sessionStorage.removeItem('autodataTrocar');
-            sessionStorage.removeItem('autodataFallback');
-            sessionStorage.removeItem('autodatasCandidatasPopup');
-            sessionStorage.removeItem('autopopupSemSucesso');
-            AF.sons.tocar('parada');
-            AF.core.log('PARADO pelo usuario.', '#f87171');
+            docC.getElementById('btn-analisar').onclick = async function () {
+                AF.estado.cancelado = false;
+                docC.getElementById('log-box').innerHTML = '';
+                await AF.analisar.analisarTodas();
+            };
+
+            docC.getElementById('btn-executar').onclick = async function () {
+                AF.estado.cancelado = false;
+                docC.getElementById('log-box').innerHTML = '';
+                await AF.fases.processarTodas(docC);
+            };
+
+            docC.getElementById('btn-parar').onclick = function () {
+                AF.core.cancelarTudo();
+                sessionStorage.removeItem('autodataTrocar');
+                sessionStorage.removeItem('autodataFallback');
+                sessionStorage.removeItem('autodatasCandidatasPopup');
+                sessionStorage.removeItem('autopopupSemSucesso');
+                AF.sons.tocar('parada');
+                AF.core.log('PARADO pelo usuario.', '#f87171');
+                AF.core.setBotoes(false);
+            };
+
+            docC.getElementById('btn-copiar').onclick = function () {
+                if (!AF.estado.textoCopiavel) return;
+                navigator.clipboard.writeText(AF.estado.textoCopiavel).then(function () {
+                    AF.sons.tocar('copia');
+                    AF.core.log('Relatorio copiado!', '#a3e635');
+                }).catch(function () {
+                    AF.core.log('Erro ao copiar.', '#f87171');
+                });
+            };
+
+            AF.core.log('Pronto para executar.', '#a3e635');
             AF.core.setBotoes(false);
-        };
+        });
 
-        docC.getElementById('btn-copiar').onclick = function () {
-            if (!AF.estado.textoCopiavel) return;
-            navigator.clipboard.writeText(AF.estado.textoCopiavel).then(function () {
-                AF.sons.tocar('copia');
-                AF.core.log('Relatorio copiado!', '#a3e635');
-            }).catch(function () {
-                AF.core.log('Erro ao copiar.', '#f87171');
-            });
-        };
-
-        AF.core.log('Pronto para executar.', '#a3e635');
-        AF.core.setBotoes(false);
+    }).catch(function (erro) {
+        console.error('[FPW] Falha ao carregar modulos:', erro);
     });
+
 })();
