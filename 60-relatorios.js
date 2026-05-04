@@ -10,6 +10,14 @@
         return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
     }
 
+    // ── Escapar valor para TSV/Excel (evita #DESPEJAR em valores negativos) ──
+    // Prefixar com \' faz o Excel tratar como texto puro.
+
+    function escaparTSV(v) {
+        var s = String(v);
+        return s.charAt(0) === '-' ? "'" + s : s;
+    }
+
     // ── Habilitar botão copiar ─────────────────────────────────────────
 
     AF.relatorios.habilitarCopiar = function (titulo) {
@@ -74,15 +82,9 @@
 
     // ── Relatório de Análise (50-analisar) — formato TSV para planilha ───
     //
-    // Colunas fixas (sempre presentes, mesmo com valor 0 / 00:00):
-    //   Nome | Folgas | Irreg | Interj | Cod47 | HE100% | HEF100% | HEC70%
-    //
-    // Separador: TAB (	) — ao colar no Excel/Sheets cada campo vai para
-    // sua própria coluna automaticamente.
-    //
-    // Filtros aplicados antes de incluir na tabela:
-    //   - nome não pode ser vazio/nulo
-    //   - vazia:true é excluído (sem marcacões)
+    // Colunas fixas: Nome | Folgas | Irreg | Interj | Cod47 | HE100% | HEF100% | HEC70%
+    // Separador TAB — colar no Excel/Sheets distribui automaticamente em colunas.
+    // Valores negativos são prefixados com ' para evitar erro #DESPEJAR no Excel.
 
     AF.relatorios.gerarAnalise = function (stats, lista, nomeMesStr, tempoMs, cancelado) {
         var tempoTotal = Math.round(tempoMs / 1000);
@@ -92,7 +94,7 @@
         var totalHEstr  = fmtMin(stats.HEmin);
         var totalHEFstr = fmtMin(stats.HEFmin);
 
-        // ── Cabeçalho do relatório (texto corrido) ──────────────────────
+        // ── Cabeçalho corrido ─────────────────────────────────────────
         var rel = 'RELATORIO DE ANALISE - ' + nomeMesStr + '\n';
         rel += 'Status: '               + (cancelado ? 'INTERROMPIDO' : 'CONCLUIDO') + '\n';
         rel += 'Gerado em: '            + new Date().toLocaleString('pt-BR') + '\n';
@@ -107,40 +109,48 @@
         rel += 'Total HEF100%: '        + totalHEFstr + '\n';
         rel += '\n';
 
-        // ── Tabela TSV (cabeçalho + linhas) ────────────────────────────
+        // ── Tabela TSV ───────────────────────────────────────────────
         var T = '\t';
         rel += 'Nome' + T + 'Folgas' + T + 'Irreg' + T + 'Interj' + T + 'Cod47' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%' + '\n';
 
         for (var ri = 0; ri < lista.length; ri++) {
             var re = lista[ri];
-
-            // Bug fix 1: ignorar linhas com nome vazio ou nulo
             if (!re.nome || !re.nome.trim()) continue;
 
-            // Bug fix 2: garantir valores padrão caso campos não existam
             var folgas = re.folgas  != null ? re.folgas : 0;
             var irregs = re.irregs  != null ? re.irregs : 0;
             var interj = re.interj  != null ? re.interj : 0;
             var cod47  = re.cod47   != null ? re.cod47  : 0;
             var he     = re.HE  || '00:00';
             var hef    = re.HEF || '00:00';
-            var hec    = re.HEC || '00:00'; // Bug fix 3: HEC70% estava ausente
+            var hec    = re.HEC || '00:00';
 
-            rel += re.nome.trim() + T
-                +  folgas + T
-                +  irregs + T
-                +  interj + T
-                +  cod47  + T
-                +  he     + T
-                +  hef    + T
-                +  hec    + '\n';
+            rel += re.nome.trim()      + T
+                +  folgas              + T
+                +  irregs              + T
+                +  interj              + T
+                +  cod47               + T
+                +  escaparTSV(he)      + T
+                +  escaparTSV(hef)     + T
+                +  escaparTSV(hec)     + '\n';
+
+            // Log por pessoa (igual ao comportamento original)
+            var partes = [];
+            partes.push('Folgas:' + folgas);
+            partes.push('Irreg:'  + irregs);
+            partes.push('Interj:' + interj);
+            if (cod47)        partes.push('Cod47:'   + cod47);
+            if (he  !== '00:00') partes.push('HE100%:'  + he);
+            if (hef !== '00:00') partes.push('HEF100%:' + hef);
+            if (hec !== '00:00') partes.push('HEC70%:'  + hec);
+            AF.core.log(re.nome.trim() + ' | ' + partes.join(' | '), '#facc15');
         }
 
         AF.estado.relatorio     = rel;
         AF.estado.textoCopiavel = rel.replace(/\n/g, '\r\n');
         AF.relatorios.habilitarCopiar('Copiar relatorio de analise');
 
-        // ── Log de encerramento ───────────────────────────────────────
+        // ── Log de encerramento (após todas as linhas) ─────────────────
         AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         AF.core.log('ANALISE CONCLUIDA', '#f9fafb');
         AF.core.log('Tempo: ' + min + 'min ' + seg + 's', '#89b4fa');
