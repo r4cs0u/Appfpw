@@ -125,7 +125,7 @@
                 });
             };
 
-            AF.core.log('[TESTE] Modulos carregados dinamicamente!', '#facc15');
+            AF.core.log('Pronto para executar.', '#a3e635');
             AF.core.setBotoes(false);
         });
 
