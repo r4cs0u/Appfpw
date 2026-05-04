@@ -61,8 +61,13 @@
         for (var ri = 0; ri < relLista.length; ri++) {
             var re = relLista[ri];
             if (re.pulada) continue;
+
+            var he  = normHora(re.HE);
+            var hef = normHora(re.HEF);
+            var hec = normHora(re.HEC);
+
             var temAlgo = re.folgasAlteradas || re.folgasSemAlteracao || re.linhas47 ||
-                          re.irregs || re.interj || re.HE !== '00:00' || re.HEF !== '00:00';
+                          re.irregs || re.interj || he !== '00:00' || hef !== '00:00';
             if (!temAlgo) continue;
 
             var partes = [];
@@ -71,9 +76,9 @@
             partes.push('47>48:'  + re.linhas47);
             partes.push('Irreg:'  + re.irregs);
             partes.push('Interj:' + re.interj);
-            if (re.HE  !== '00:00') partes.push('HE100%:'  + re.HE);
-            if (re.HEF !== '00:00') partes.push('HEF100%:' + re.HEF);
-            partes.push('HEC70%:' + re.HEC);
+            if (he  !== '00:00') partes.push('HE100%:'  + he);
+            if (hef !== '00:00') partes.push('HEF100%:' + hef);
+            partes.push('HEC70%:' + hec);
 
             relFinal += re.nome + ' | ' + partes.join(' | ') + '\n';
             AF.core.log(re.nome + ' | ' + partes.join(' | '), '#facc15');
