@@ -10,6 +10,19 @@
         return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
     }
 
+    // ── Normalizar hora: garante formato HH:MM (remove segundos se houver) ──
+    // Exemplos: '33:35:00' -> '33:35' | '-22:13' -> '-22:13' | '00:00' -> '00:00'
+
+    function normHora(v) {
+        var s = String(v || '00:00').trim();
+        var neg = s.charAt(0) === '-';
+        var base = neg ? s.slice(1) : s;
+        var partes = base.split(':');
+        var h   = (partes[0] || '00').padStart(2, '0');
+        var min = (partes[1] || '00').padStart(2, '0');
+        return (neg ? '-' : '') + h + ':' + min;
+    }
+
     // ── Escapar valor para TSV/Excel (evita #DESPEJAR em valores negativos) ──
 
     function escaparTSV(v) {
@@ -116,9 +129,9 @@
             var irregs = re.irregs != null ? re.irregs : 0;
             var interj = re.interj != null ? re.interj : 0;
             var cod47  = re.cod47  != null ? re.cod47  : 0;
-            var he     = re.HE  || '00:00';
-            var hef    = re.HEF || '00:00';
-            var hec    = re.HEC || '00:00';
+            var he     = normHora(re.HE);
+            var hef    = normHora(re.HEF);
+            var hec    = normHora(re.HEC);
 
             rel += re.nome.trim()  + T
                 +  folgas          + T
@@ -138,18 +151,18 @@
         for (var li = 0; li < lista.length; li++) {
             var le = lista[li];
             if (!le.nome || !le.nome.trim()) continue;
-            var lf = le.folgas != null ? le.folgas : 0;
-            var li2 = le.irregs != null ? le.irregs : 0;
-            var lt = le.interj != null ? le.interj : 0;
-            var lc = le.cod47  != null ? le.cod47  : 0;
-            var lhe  = le.HE  || '00:00';
-            var lhef = le.HEF || '00:00';
-            var lhec = le.HEC || '00:00';
+            var lf   = le.folgas != null ? le.folgas : 0;
+            var li2  = le.irregs != null ? le.irregs : 0;
+            var lt   = le.interj != null ? le.interj : 0;
+            var lc   = le.cod47  != null ? le.cod47  : 0;
+            var lhe  = normHora(le.HE);
+            var lhef = normHora(le.HEF);
+            var lhec = normHora(le.HEC);
             var p = [];
             p.push('Folgas:' + lf);
             p.push('Irreg:'  + li2);
             p.push('Interj:' + lt);
-            if (lc)            p.push('Cod47:'   + lc);
+            if (lc)               p.push('Cod47:'   + lc);
             if (lhe  !== '00:00') p.push('HE100%:'  + lhe);
             if (lhef !== '00:00') p.push('HEF100%:' + lhef);
             if (lhec !== '00:00') p.push('HEC70%:'  + lhec);
@@ -163,7 +176,6 @@
         AF.core.log('Folhas: ' + (stats.totalFolhas + stats.vazias) + ' | Folgas: ' + stats.folgasMoviveis + ' | Irreg: ' + stats.irregs + ' | Interj: ' + stats.interj + ' | Cod47: ' + stats.cod47, '#89b4fa');
         AF.core.log('HE100%: ' + totalHEstr + ' | HEF100%: ' + totalHEFstr, '#89b4fa');
 
-        // Exibe o texto completo que será copiado (cada linha como entrada no log)
         AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         var linhasRel = rel.split('\n');
         for (var ki = 0; ki < linhasRel.length; ki++) {
