@@ -90,7 +90,8 @@
         return count;
     };
 
-    // ── Soma HE (cod 2) e HEF (cod 27) ──────────────────────────────────
+    // ── Soma HE (cod 2) e HEF (cod 27) ───────────────────────────────
+    // Aceita formatos HH:MM e HH:MM:SS (segundos ignorados)
 
     AF.analisar.somarHorasExtras = function () {
         try {
@@ -108,7 +109,8 @@
                 var n = sel.id.replace('lstNome', '');
                 var inp = doc1.querySelector('input[name="HorasInf' + n + '"]');
                 var raw = inp ? inp.value.replace('*', '').trim() : '';
-                var m = raw.match(/^(\d+):(\d+)$/);
+                // aceita HH:MM ou HH:MM:SS — captura apenas horas e minutos
+                var m = raw.match(/^(\d+):(\d+)(?::\d+)?$/);
                 if (!m) return;
                 var min = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
                 if (isHEF) totalHEFmin += min;
@@ -125,7 +127,8 @@
         }
     };
 
-    // ── Lê saldo de compensação (frame 2, txtSaldo) ─────────────────────
+    // ── Lê saldo de compensação (frame 2, txtSaldo) ───────────────────
+    // Aceita formatos HH:MM e HH:MM:SS (segundos ignorados)
 
     AF.analisar.lerSaldoHEC = function () {
         try {
@@ -133,8 +136,8 @@
             var inp = doc2.getElementById('txtSaldo');
             if (!inp) return '00:00';
             var raw = inp.value.trim();
-            var negativo = raw.startsWith('-');
-            var m = raw.replace('-', '').replace('*', '').trim().match(/^(\d+):(\d+)$/);
+            var negativo = raw.charAt(0) === '-';
+            var m = raw.replace('-', '').replace('*', '').trim().match(/^(\d+):(\d+)(?::\d+)?$/);
             if (!m) return '00:00';
             var h   = String(parseInt(m[1], 10)).padStart(2, '0');
             var min = String(parseInt(m[2], 10)).padStart(2, '0');
@@ -144,7 +147,7 @@
         }
     };
 
-    // ── Análise completa de uma folha ────────────────────────────────────
+    // ── Análise completa de uma folha ─────────────────────────────────
 
     AF.analisar.analisarFolhaAtual = function () {
         if (AF.core.paginaVaziaAgora()) {
@@ -174,7 +177,7 @@
     AF.analisar.analisarTodas = async function () {
         AF.estado.cancelado = false;
         AF.estado.rodando = true;
-		AF.core.setBotoes(true);
+        AF.core.setBotoes(true);
         AF.core.getDocC().getElementById('log-box').innerHTML = '';
         AF.sons.tocar('inicio');
 
@@ -234,13 +237,13 @@
 
                 if (temAlgo) {
                     var partes = [];
-                    if (r.folgas)          partes.push('Folgas:' + r.folgas);
+                    if (r.folgas)            partes.push('Folgas:' + r.folgas);
                     partes.push('Irreg:'  + r.irregs);
                     partes.push('Interj:' + r.interj);
-                    if (r.cod47)           partes.push('Cod47:'  + r.cod47);
-					if (r.HE  !== '00:00') partes.push('HE100%:'  + r.HE);
-					if (r.HEF !== '00:00') partes.push('HEF100%:' + r.HEF);
-					if (r.HEC !== '00:00') partes.push('HEC70%:'  + r.HEC);
+                    if (r.cod47)             partes.push('Cod47:'   + r.cod47);
+                    if (r.HE  !== '00:00')   partes.push('HE100%:'  + r.HE);
+                    if (r.HEF !== '00:00')   partes.push('HEF100%:' + r.HEF);
+                    if (r.HEC !== '00:00')   partes.push('HEC70%:'  + r.HEC);
                     AF.core.log('! ' + nome + ' | ' + partes.join(' | '), '#facc15');
                 } else {
                     AF.core.log('OK ' + nome, '#6b7280');
@@ -272,7 +275,7 @@
         if (!AF.estado.cancelado) AF.sons.tocar('fim');
 
         AF.core.setBotoes(false);
-		AF.estado.rodando = false;
+        AF.estado.rodando = false;
     };
 
 })();

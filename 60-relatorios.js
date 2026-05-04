@@ -11,7 +11,7 @@
     }
 
     // ── Normalizar hora: garante formato HH:MM (remove segundos se houver) ──
-    // Exemplos: '33:35:00' -> '33:35' | '-22:13' -> '-22:13' | '00:00' -> '00:00'
+    // Cobre qualquer valor residual que chegue como HH:MM:SS
 
     function normHora(v) {
         var s = String(v || '00:00').trim();
@@ -21,13 +21,6 @@
         var h   = (partes[0] || '00').padStart(2, '0');
         var min = (partes[1] || '00').padStart(2, '0');
         return (neg ? '-' : '') + h + ':' + min;
-    }
-
-    // ── Escapar valor para TSV/Excel (evita #DESPEJAR em valores negativos) ──
-
-    function escaparTSV(v) {
-        var s = String(v);
-        return s.charAt(0) === '-' ? "'" + s : s;
     }
 
     // ── Habilitar botão copiar ─────────────────────────────────────────
@@ -133,14 +126,14 @@
             var hef    = normHora(re.HEF);
             var hec    = normHora(re.HEC);
 
-            rel += re.nome.trim()  + T
-                +  folgas          + T
-                +  irregs          + T
-                +  interj          + T
-                +  cod47           + T
-                +  escaparTSV(he)  + T
-                +  escaparTSV(hef) + T
-                +  escaparTSV(hec) + '\n';
+            rel += re.nome.trim() + T
+                +  folgas         + T
+                +  irregs         + T
+                +  interj         + T
+                +  cod47          + T
+                +  he             + T
+                +  hef            + T
+                +  hec            + '\n';
         }
 
         AF.estado.relatorio     = rel;
