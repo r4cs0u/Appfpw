@@ -183,9 +183,14 @@
     AF.fases.planejarFase3 = function (mapa, presasAnteriores) {
         var acoes = [];
         var presasFinais = [];
+        var presasVistas = {};
 
         for (var i = 0; i < presasAnteriores.length; i++) {
             var presa = presasAnteriores[i];
+            var chavePresa = presa.semanaId + '|' + presa.dataFolga;
+            if (presasVistas[chavePresa]) continue;
+            presasVistas[chavePresa] = true;
+
             var semana = mapa.semanas[presa.semanaId];
             if (!semana) { presasFinais.push(presa); continue; }
 
