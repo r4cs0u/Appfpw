@@ -80,7 +80,9 @@
     // Separador: TAB (	) — ao colar no Excel/Sheets cada campo vai para
     // sua própria coluna automaticamente.
     //
-    // O cabeçalho é incluído como primeira linha da seção de dados.
+    // Filtros aplicados antes de incluir na tabela:
+    //   - nome não pode ser vazio/nulo
+    //   - vazia:true é excluído (sem marcacões)
 
     AF.relatorios.gerarAnalise = function (stats, lista, nomeMesStr, tempoMs, cancelado) {
         var tempoTotal = Math.round(tempoMs / 1000);
@@ -107,19 +109,31 @@
 
         // ── Tabela TSV (cabeçalho + linhas) ────────────────────────────
         var T = '\t';
-        var cabTSV = 'Nome' + T + 'Folgas' + T + 'Irreg' + T + 'Interj' + T + 'Cod47' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%';
-        rel += cabTSV + '\n';
+        rel += 'Nome' + T + 'Folgas' + T + 'Irreg' + T + 'Interj' + T + 'Cod47' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%' + '\n';
 
         for (var ri = 0; ri < lista.length; ri++) {
             var re = lista[ri];
-            rel += re.nome        + T
-                +  re.folgas      + T
-                +  re.irregs      + T
-                +  re.interj      + T
-                +  re.cod47       + T
-                +  re.HE          + T
-                +  re.HEF         + T
-                +  re.HEC         + '\n';
+
+            // Bug fix 1: ignorar linhas com nome vazio ou nulo
+            if (!re.nome || !re.nome.trim()) continue;
+
+            // Bug fix 2: garantir valores padrão caso campos não existam
+            var folgas = re.folgas  != null ? re.folgas : 0;
+            var irregs = re.irregs  != null ? re.irregs : 0;
+            var interj = re.interj  != null ? re.interj : 0;
+            var cod47  = re.cod47   != null ? re.cod47  : 0;
+            var he     = re.HE  || '00:00';
+            var hef    = re.HEF || '00:00';
+            var hec    = re.HEC || '00:00'; // Bug fix 3: HEC70% estava ausente
+
+            rel += re.nome.trim() + T
+                +  folgas + T
+                +  irregs + T
+                +  interj + T
+                +  cod47  + T
+                +  he     + T
+                +  hef    + T
+                +  hec    + '\n';
         }
 
         AF.estado.relatorio     = rel;
