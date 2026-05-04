@@ -11,7 +11,6 @@
     }
 
     // ── Normalizar hora: garante formato HH:MM (remove segundos se houver) ──
-    // Cobre qualquer valor residual que chegue como HH:MM:SS
 
     function normHora(v) {
         var s = String(v || '00:00').trim();
@@ -21,6 +20,13 @@
         var h   = (partes[0] || '00').padStart(2, '0');
         var min = (partes[1] || '00').padStart(2, '0');
         return (neg ? '-' : '') + h + ':' + min;
+    }
+
+    // ── Escapar para Excel: prefixo ' em valores negativos evita #DESPEJAR ──
+
+    function xls(v) {
+        var s = String(v);
+        return s.charAt(0) === '-' ? "'" + s : s;
     }
 
     // ── Habilitar botão copiar ─────────────────────────────────────────
@@ -136,9 +142,9 @@
                 +  irregs         + T
                 +  interj         + T
                 +  cod47          + T
-                +  he             + T
-                +  hef            + T
-                +  hec            + '\n';
+                +  xls(he)        + T
+                +  xls(hef)       + T
+                +  xls(hec)       + '\n';
         }
 
         AF.estado.relatorio     = rel;
