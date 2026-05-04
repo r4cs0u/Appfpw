@@ -129,7 +129,7 @@
             if (linhasRel[ki].trim()) AF.core.log(linhasRel[ki], '#6b7280');
         }
         AF.core.log('──────────────────', '#374151');
-        AF.core.log('Relatorio pronto para copiar (formato planilha).', '#a3e635');
+        AF.core.log('Relatorio pronto para copiar.', '#a3e635');
     };
 
     // ── Relatório do Analisar (50-analisar) — TSV ──────────────────────
@@ -224,7 +224,7 @@
             if (linhasRel[ki].trim()) AF.core.log(linhasRel[ki], '#6b7280');
         }
         AF.core.log('──────────────────', '#374151');
-        AF.core.log('Relatorio pronto para copiar (formato planilha).', '#a3e635');
+        AF.core.log('Relatorio pronto para copiar.', '#a3e635');
     };
 
 })();
