@@ -390,6 +390,7 @@
             pulada:             false
         });
 
+        // log de progresso por folha (mantido aqui intencionalmente)
         AF.core.log('Folha concluida | Folgas: ' + totalMovidas + ' | Presas: ' + presasFinais.length + ' | 47>48: ' + linhas47 + ' | HE100%: ' + extras.HE + ' | HEF100%: ' + extras.HEF + ' | HEC70%: ' + saldoHEC, '#a6e3a1');
     };
 

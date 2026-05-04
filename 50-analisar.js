@@ -109,7 +109,6 @@
                 var n = sel.id.replace('lstNome', '');
                 var inp = doc1.querySelector('input[name="HorasInf' + n + '"]');
                 var raw = inp ? inp.value.replace('*', '').trim() : '';
-                // aceita HH:MM ou HH:MM:SS — captura apenas horas e minutos
                 var m = raw.match(/^(\d+):(\d+)(?::\d+)?$/);
                 if (!m) return;
                 var min = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
@@ -232,9 +231,9 @@
                 stats.HEmin          += r.HEmin;
                 stats.HEFmin         += r.HEFmin;
 
+                // log de progresso por folha (mantido aqui intencionalmente)
                 var temAlgo = r.folgas || r.irregs || r.interj || r.cod47 ||
                               r.HE !== '00:00' || r.HEF !== '00:00';
-
                 if (temAlgo) {
                     var partes = [];
                     if (r.folgas)            partes.push('Folgas:' + r.folgas);
