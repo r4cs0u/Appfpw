@@ -180,7 +180,8 @@
 
     // ── Fase 3 ─────────────────────────────────────────────────────────
     // Gatilho: folga presa após Fase 1 + Fase 2.
-    // Escopo: semana da folga presa.
+    // Escopo: semana da folga presa. Se não houver ausência na semana,
+    //         busca na última semana do mês (mapa.ultimaSemanaId).
     // Prioridade: feriado visível no DOM (feriadosSemana) primeiro,
     //             depois feriado oculto calculado (feriadosOcultos).
 
@@ -198,7 +199,12 @@
             var semana = mapa.semanas[presa.semanaId];
             if (!semana) { presasFinais.push(presa); continue; }
 
+            // Busca ausências na semana da presa; se vazio, tenta última semana
             var ausencias = (semana.ausenciasMes || []).slice();
+            if (!ausencias.length) {
+                var semUltima = mapa.semanas[mapa.ultimaSemanaId];
+                ausencias = semUltima ? (semUltima.ausenciasMes || []).slice() : [];
+            }
             if (!ausencias.length) { presasFinais.push(presa); continue; }
 
             // 1º tenta feriado visível no DOM
