@@ -179,6 +179,10 @@
     };
 
     // ── Fase 3 ─────────────────────────────────────────────────────────
+    // Gatilho: folga presa após Fase 1 + Fase 2.
+    // Escopo: semana da folga presa.
+    // Prioridade: feriado visível no DOM (feriadosSemana) primeiro,
+    //             depois feriado oculto calculado (feriadosOcultos).
 
     AF.fases.planejarFase3 = function (mapa, presasAnteriores) {
         var acoes = [];
@@ -195,18 +199,40 @@
             if (!semana) { presasFinais.push(presa); continue; }
 
             var ausencias = (semana.ausenciasMes || []).slice();
-            var feriados = (semana.feriadosSemana || []).slice();
-            if (!ausencias.length || !feriados.length) { presasFinais.push(presa); continue; }
+            if (!ausencias.length) { presasFinais.push(presa); continue; }
 
-            acoes.push({
-                fase: 3, tipo: 'feriado',
-                semanaId: presa.semanaId,
-                numAbrirPopup: ausencias[0].num,
-                dataAusencia: ausencias[0].dataStr,
-                dataOrigem: feriados[0].dataStr,
-                candidatos: [feriados[0].dataStr],
-                dataFolgaOriginal: presa.dataFolga
-            });
+            // 1º tenta feriado visível no DOM
+            var feriadosVisiveis = (semana.feriadosSemana || []);
+            if (feriadosVisiveis.length > 0) {
+                acoes.push({
+                    fase: 3, tipo: 'feriado_visivel',
+                    semanaId: presa.semanaId,
+                    numAbrirPopup: ausencias[0].num,
+                    dataAusencia: ausencias[0].dataStr,
+                    dataOrigem: feriadosVisiveis[0].dataStr,
+                    candidatos: [feriadosVisiveis[0].dataStr],
+                    dataFolgaOriginal: presa.dataFolga
+                });
+                continue;
+            }
+
+            // 2º tenta feriado oculto calculado (ex: 01/05 sem irregularidade)
+            var feriadosOcultos = (semana.feriadosOcultos || []);
+            if (feriadosOcultos.length > 0) {
+                acoes.push({
+                    fase: 3, tipo: 'feriado_oculto',
+                    semanaId: presa.semanaId,
+                    numAbrirPopup: ausencias[0].num,
+                    dataAusencia: ausencias[0].dataStr,
+                    dataOrigem: feriadosOcultos[0],
+                    candidatos: feriadosOcultos.slice(),
+                    dataFolgaOriginal: presa.dataFolga
+                });
+                continue;
+            }
+
+            // sem feriado na semana: folga permanece presa
+            presasFinais.push(presa);
         }
 
         return { acoes: acoes, presasFinais: presasFinais };
@@ -351,7 +377,7 @@
         for (var i = 0; i < plano3.acoes.length; i++) {
             if (AF.estado.cancelado) break;
             var acao = plano3.acoes[i];
-            AF.core.log('Fase 3: ausencia ' + acao.dataAusencia + ' <- feriado ' + acao.dataOrigem, '#89b4fa');
+            AF.core.log('Fase 3 [' + acao.tipo + ']: ausencia ' + acao.dataAusencia + ' <- feriado ' + acao.dataOrigem, '#89b4fa');
             var r3 = await AF.popup.executarAcaoFolga(acao);
             if (r3.ok) totalMovidas++;
             else presasFinais.push({ fase: 3, semanaId: acao.semanaId, dataFolga: acao.dataFolgaOriginal || acao.dataOrigem });
@@ -395,7 +421,6 @@
             pulada:             false
         });
 
-        // log de progresso por folha (mantido aqui intencionalmente)
         AF.core.log('Folha concluida | Folgas: ' + totalMovidas + ' | Presas: ' + presasFinais.length + ' | 47>48: ' + linhas47 + ' | HE100%: ' + extras.HE + ' | HEF100%: ' + extras.HEF + ' | HEC70%: ' + saldoHEC, '#a6e3a1');
     };
 
