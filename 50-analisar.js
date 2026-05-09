@@ -9,14 +9,46 @@
     AF.analisar.contarFolgas = function () {
         var mapa = AF.mapa.mapearFolhaAtual();
         var chaves = Object.keys(mapa.semanas);
+        var alvo = AF.utils.mesAlvoDaTabela();
         var total = 0;
 
         for (var i = 0; i < chaves.length; i++) {
             var semana = mapa.semanas[chaves[i]];
 
+            // Verifica se a semana pertence ao mes alvo ou é a semana do ultimo mes
+            // que tem sobreposição com o mes alvo (primeira semana do mes alvo)
+            var semanaValida = false;
+            var todasFolgas = (semana.folgas || [])
+                .concat(semana.folgasVisiveis || [])
+                .concat(semana.folgasOcultas || []);
+
+            for (var k = 0; k < todasFolgas.length; k++) {
+                var dataObj = AF.utils.parseDataBR(todasFolgas[k].dataStr);
+                if (dataObj && AF.utils.ehMesAlvo(dataObj, alvo)) {
+                    semanaValida = true;
+                    break;
+                }
+            }
+            // Também verifica ausencias e feriados da semana
+            if (!semanaValida) {
+                var todasDatas = (semana.ausencias || [])
+                    .concat(semana.ausenciasMes || [])
+                    .concat(semana.feriados || []);
+                for (var m = 0; m < todasDatas.length; m++) {
+                    var dObj = AF.utils.parseDataBR(todasDatas[m].dataStr);
+                    if (dObj && AF.utils.ehMesAlvo(dObj, alvo)) {
+                        semanaValida = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!semanaValida) continue;
+
             for (var j = 0; j < semana.folgas.length; j++) {
                 var folga = semana.folgas[j];
-                if (folga.foraDoMes) continue;
+                var fDataObj = AF.utils.parseDataBR(folga.dataStr);
+                if (!fDataObj || !AF.utils.ehMesAlvo(fDataObj, alvo)) continue;
                 if (semana.ausencias.length > 0 || semana.feriados.length > 0) {
                     total++;
                 }
@@ -24,8 +56,15 @@
 
             var temAusenciaMes = (semana.ausenciasMes && semana.ausenciasMes.length > 0);
             if (temAusenciaMes) {
-                total += (semana.folgasVisiveis || []).filter(function (f) { return f.foraDoMes; }).length;
-                total += (semana.folgasOcultas || []).length;
+                var fv = (semana.folgasVisiveis || []).filter(function (f) {
+                    var fd = AF.utils.parseDataBR(f.dataStr);
+                    return fd && AF.utils.ehMesAlvo(fd, alvo) && f.foraDoMes;
+                });
+                total += fv.length;
+                total += (semana.folgasOcultas || []).filter(function (f) {
+                    var fd = AF.utils.parseDataBR(f.dataStr);
+                    return fd && AF.utils.ehMesAlvo(fd, alvo);
+                }).length;
             }
         }
 
@@ -91,11 +130,13 @@
     };
 
     // ── Soma HE (cod 2) e HEF (cod 27) ───────────────────────────────
+    // Filtra por mes alvo antes de somar
     // Aceita formatos HH:MM e HH:MM:SS (segundos ignorados)
 
     AF.analisar.somarHorasExtras = function () {
         try {
             var doc1 = AF.core.getDoc1();
+            var alvo = AF.utils.mesAlvoDaTabela();
             var totalHEmin = 0, totalHEFmin = 0;
 
             Array.from(doc1.querySelectorAll('select[id^="lstNome"]')).forEach(function (sel) {
@@ -107,6 +148,16 @@
                 if (!isHEP && !isHEF) return;
 
                 var n = sel.id.replace('lstNome', '');
+
+                // Filtrar por data do mes alvo
+                var inpData = doc1.querySelector('input[name="Data' + n + '"]') ||
+                              doc1.querySelector('input[id="Data' + n + '"]');
+                if (inpData) {
+                    var dataStr = inpData.value || AF.mapa.obterDataDoInput(inpData);
+                    var dataObj = AF.utils.parseDataBR(dataStr);
+                    if (!dataObj || !AF.utils.ehMesAlvo(dataObj, alvo)) return;
+                }
+
                 var inp = doc1.querySelector('input[name="HorasInf' + n + '"]');
                 var raw = inp ? inp.value.replace('*', '').trim() : '';
                 var m = raw.match(/^(\d+):(\d+)(?::\d+)?$/);
@@ -127,6 +178,7 @@
     };
 
     // ── Lê saldo de compensação (frame 2, txtSaldo) ───────────────────
+    // Saldo global — não há data para filtrar, mantido como está
     // Aceita formatos HH:MM e HH:MM:SS (segundos ignorados)
 
     AF.analisar.lerSaldoHEC = function () {
