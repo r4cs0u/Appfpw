@@ -69,7 +69,7 @@
 	                    candidatos: [folga.dataStr]
 	                });
 	            } else {
-	                presas.push({ fase: 1, semanaId: semKey, dataFolga: folga.dataStr });
+	                presas.push({ fase: 1, semanaId: semKey, dataFolga: folga.dataStr, numFolga: folga.num });
 	            }
 	        }
         }
@@ -88,7 +88,7 @@
             AF.core.log('Fase 1: ausencia ' + acao.dataAusencia + ' <- folga ' + acao.dataOrigem, '#89b4fa');
             var r = await AF.popup.executarAcaoFolga(acao);
             if (r.ok) movidas++;
-            if (r.semAlteracao) presas.push({ fase: 1, semanaId: acao.semanaId, dataFolga: acao.dataOrigem });
+            if (r.semAlteracao) presas.push({ fase: 1, semanaId: acao.semanaId, dataFolga: acao.dataOrigem, numFolga: acao.numAbrirPopup });
         }
 
         return { movidas: movidas, presas: presas };
@@ -171,7 +171,7 @@
 
             var r = await AF.popup.executarAcaoFolga(acao);
             if (r.ok) { movidas++; continue; }
-            if (rodada.tipo === 'oculta') presas.push({ fase: 2, semanaId: acao.semanaId, dataFolga: acao.dataOrigem });
+            if (rodada.tipo === 'oculta') presas.push({ fase: 2, semanaId: acao.semanaId, dataFolga: acao.dataOrigem, numFolga: acao.numAbrirPopup });
             break;
         }
 
@@ -180,8 +180,8 @@
 
     // ── Fase 3 ─────────────────────────────────────────────────────────
     // Gatilho: folga presa após Fase 1 + Fase 2.
-    // Escopo: semana da folga presa. Se não houver ausência na semana,
-    //         busca na última semana do mês (mapa.ultimaSemanaId).
+    // Escopo: semana da folga presa.
+    // numAbrirPopup: usa ausenciasMes[0] se disponível, senão usa numFolga da presa.
     // Prioridade: feriado visível no DOM (feriadosSemana) primeiro,
     //             depois feriado oculto calculado (feriadosOcultos).
 
@@ -199,13 +199,19 @@
             var semana = mapa.semanas[presa.semanaId];
             if (!semana) { presasFinais.push(presa); continue; }
 
-            // Busca ausências na semana da presa; se vazio, tenta última semana
+            // Determina num e dataAusencia: prioriza ausenciasMes, fallback = própria folga
             var ausencias = (semana.ausenciasMes || []).slice();
-            if (!ausencias.length) {
-                var semUltima = mapa.semanas[mapa.ultimaSemanaId];
-                ausencias = semUltima ? (semUltima.ausenciasMes || []).slice() : [];
+            var numPopup, dataAusencia;
+            if (ausencias.length) {
+                numPopup     = ausencias[0].num;
+                dataAusencia = ausencias[0].dataStr;
+            } else if (presa.numFolga) {
+                numPopup     = presa.numFolga;
+                dataAusencia = presa.dataFolga;
+            } else {
+                presasFinais.push(presa);
+                continue;
             }
-            if (!ausencias.length) { presasFinais.push(presa); continue; }
 
             // 1º tenta feriado visível no DOM
             var feriadosVisiveis = (semana.feriadosSemana || []);
@@ -213,8 +219,8 @@
                 acoes.push({
                     fase: 3, tipo: 'feriado_visivel',
                     semanaId: presa.semanaId,
-                    numAbrirPopup: ausencias[0].num,
-                    dataAusencia: ausencias[0].dataStr,
+                    numAbrirPopup: numPopup,
+                    dataAusencia: dataAusencia,
                     dataOrigem: feriadosVisiveis[0].dataStr,
                     candidatos: [feriadosVisiveis[0].dataStr],
                     dataFolgaOriginal: presa.dataFolga
@@ -228,8 +234,8 @@
                 acoes.push({
                     fase: 3, tipo: 'feriado_oculto',
                     semanaId: presa.semanaId,
-                    numAbrirPopup: ausencias[0].num,
-                    dataAusencia: ausencias[0].dataStr,
+                    numAbrirPopup: numPopup,
+                    dataAusencia: dataAusencia,
                     dataOrigem: feriadosOcultos[0],
                     candidatos: feriadosOcultos.slice(),
                     dataFolgaOriginal: presa.dataFolga
