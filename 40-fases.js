@@ -14,18 +14,24 @@
         return domingo || disponiveis[0] || null;
     }
 
-    // ── Análise da folha atual ──────────────────────────────────────────
+    // ── Análise da folha atual ────────────────────────────────────
+    // Filtra por mes alvo + semana de transição do ultimo mes
 
     AF.fases.analisarFolha = function () {
         if (AF.core.paginaVaziaAgora()) {
             return { marc: 0, he: 0, smES: 0, interj: 0, vazia: true };
         }
 
+        var alvo = AF.utils.mesAlvoDaTabela();
         var inputs = Array.from(AF.core.getDoc1().querySelectorAll('input[name^="Irre"]'));
         var marc = 0, he = 0, smES = 0;
 
         for (var i = 0; i < inputs.length; i++) {
-            var v = AF.core.norm(inputs[i].value);
+            var inp = inputs[i];
+            var dataStr = AF.mapa.obterDataDoInput(inp);
+            var dataObj = AF.utils.parseDataBR(dataStr);
+            if (!dataObj || !AF.utils.ehMesAlvo(dataObj, alvo)) continue;
+            var v = AF.core.norm(inp.value);
             if (v.includes('marcacao irregular')) marc++;
             if (v.includes('hora extra irregular')) he++;
             if (v.includes('s/marc de entrada/saida')) smES++;
@@ -35,13 +41,17 @@
         var linhas = Array.from(AF.core.getDoc1().querySelectorAll('tr'));
         for (var j = 0; j < linhas.length; j++) {
             var txt = (linhas[j].innerText || linhas[j].textContent || '');
+            var mData = txt.match(/\d{2}\/\d{2}\/\d{4}/);
+            if (!mData) continue;
+            var dObj = AF.utils.parseDataBR(mData[0]);
+            if (!dObj || !AF.utils.ehMesAlvo(dObj, alvo)) continue;
             if (txt.includes('[Interjornada]')) interj++;
         }
 
         return { marc: marc, he: he, smES: smES, interj: interj, vazia: false };
     };
 
-    // ── Fase 1 ─────────────────────────────────────────────────────────
+    // ── Fase 1 ───────────────────────────────────────────────────────
 
     AF.fases.planejarFase1 = function (mapa) {
         var acoes = [];
@@ -94,7 +104,7 @@
         return { movidas: movidas, presas: presas };
     };
 
-    // ── Fase 2 ─────────────────────────────────────────────────────────
+    // ── Fase 2 ───────────────────────────────────────────────────────
 
     AF.fases.planejarFase2Rodada = function (mapa, historicoTentativas, datasUsadasFase2) {
         var ultimaSemanaId = mapa.ultimaSemanaId || AF.utils.semanaIdBR(new Date(mapa.alvo.getFullYear(), mapa.alvo.getMonth() + 1, 0));
@@ -178,7 +188,7 @@
         return { movidas: movidas, presas: presas };
     };
 
-    // ── Fase 3 ─────────────────────────────────────────────────────────
+    // ── Fase 3 ───────────────────────────────────────────────────────
     // Gatilho: folga presa após Fase 1 + Fase 2.
     // Escopo: semana da folga presa.
     // numAbrirPopup: usa ausenciasMes[0] se disponível, senão usa numFolga da presa.
@@ -250,7 +260,7 @@
         return { acoes: acoes, presasFinais: presasFinais };
     };
 
-    // ── Alterar 47 → 48 ────────────────────────────────────────────────
+    // ── Alterar 47 → 48 ──────────────────────────────────────────────
 
 	AF.fases.alterar47para48 = function () {
 		var doc1 = AF.core.getDoc1();
@@ -313,7 +323,7 @@
 		return nsMarcados;
 	};
 
-    // ── Gravar ─────────────────────────────────────────────────────────
+    // ── Gravar ───────────────────────────────────────────────────────────
 
 	AF.fases.gravar = async function (nsMarcados) {
 	    try {
@@ -360,7 +370,7 @@
     await AF.core.esperar(5000);
 };
 
-    // ── Processar folha atual ──────────────────────────────────────────
+    // ── Processar folha atual ───────────────────────────────────────
 
     AF.fases.processarFolhaAtual = async function (relStats, relLista) {
         var nome = AF.core.nomeAtual();
@@ -436,7 +446,7 @@
         AF.core.log('Folha concluida | Folgas: ' + totalMovidas + ' | Presas: ' + presasFinais.length + ' | 47>48: ' + linhas47 + ' | HE100%: ' + extras.HE + ' | HEF100%: ' + extras.HEF + ' | HEC70%: ' + saldoHEC, '#a6e3a1');
     };
 
-    // ── processarTodas — loop principal ───────────────────────────────
+    // ── processarTodas — loop principal ─────────────────────────────────
 
     AF.fases.processarTodas = async function () {
         AF.estado.cancelado = false;
