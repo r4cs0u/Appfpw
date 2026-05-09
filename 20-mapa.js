@@ -96,7 +96,7 @@
                     ausenciasMes: [],
                     feriados: [],
                     feriadosSemana: [],
-                    datasRegistradas: {}
+                    feriadosOcultos: []
                 };
             }
 
@@ -112,6 +112,7 @@
             };
 
             semanas[semId].registros.push(item);
+            semanas[semId].datasRegistradas = semanas[semId].datasRegistradas || {};
             semanas[semId].datasRegistradas[item.dataStr] = true;
             lista.push(item);
 
@@ -127,6 +128,7 @@
             }
         }
 
+        // ── folgasOcultas da última semana (comportamento original mantido) ──
         if (inicioUltimaSemana && semanas[ultimaSemanaId]) {
             var semUltima = semanas[ultimaSemanaId];
             for (var d = 0; d < 7; d++) {
@@ -138,6 +140,28 @@
                 var dtStr = AF.utils.fmtDataBR(dt);
                 if (!semUltima.datasRegistradas[dtStr]) {
                     semUltima.folgasOcultas.push(dtStr);
+                }
+            }
+        }
+
+        // ── feriadosOcultos: dias não visíveis no DOM que são feriados RJ ──
+        var feriadosRJ = AF.utils.calcularFeriadosRJ(dataAlvo.getFullYear());
+        var chavesSemanas = Object.keys(semanas);
+        for (var s = 0; s < chavesSemanas.length; s++) {
+            var semKey = chavesSemanas[s];
+            var sem = semanas[semKey];
+            var inicioSem = AF.utils.inicioSemanaBR(AF.utils.parseDataBR(semKey));
+            if (!inicioSem) continue;
+            sem.datasRegistradas = sem.datasRegistradas || {};
+            for (var dd = 0; dd < 7; dd++) {
+                var ddt = new Date(
+                    inicioSem.getFullYear(),
+                    inicioSem.getMonth(),
+                    inicioSem.getDate() + dd
+                );
+                var ddtStr = AF.utils.fmtDataBR(ddt);
+                if (!sem.datasRegistradas[ddtStr] && feriadosRJ.has(ddtStr)) {
+                    sem.feriadosOcultos.push(ddtStr);
                 }
             }
         }
