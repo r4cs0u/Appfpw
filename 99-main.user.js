@@ -11,7 +11,7 @@
 (function () {
     'use strict';
 
-    var BASE = 'https://raw.githubusercontent.com/r4cs0u/Appfpw/main/';
+    var BASE = 'https://raw.githubusercontent.com/r4cs0u/app-fpw/main/';
     var MODULOS = [
         '00-core.js',
         '10-utils.js',
