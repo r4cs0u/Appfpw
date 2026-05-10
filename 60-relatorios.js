@@ -4,13 +4,13 @@
     var AF = window.AutomacaoFolha;
     AF.relatorios = AF.relatorios || {};
 
-    // ── Utilitário: formatar minutos em HH:MM ──────────────────────────
+    // ── Utilitário: formatar minutos em HH:MM ──────────────────────
 
     function fmtMin(t) {
         return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
     }
 
-    // ── Normalizar hora: garante formato HH:MM ─────────────────────────
+    // ── Normalizar hora: garante formato HH:MM ─────────────────────
 
     function normHora(v) {
         var s = String(v || '00:00').trim();
@@ -22,14 +22,14 @@
         return (neg ? '-' : '') + h + ':' + min;
     }
 
-    // ── Escapar para Excel: prefixo ' em valores negativos ─────────────
+    // ── Escapar para Excel: prefixo ' em valores negativos ───────────
 
     function xls(v) {
         var s = String(v);
         return s.charAt(0) === '-' ? "'" + s : s;
     }
 
-    // ── Habilitar botão copiar ─────────────────────────────────────────
+    // ── Habilitar botão copiar ─────────────────────────────────
 
     AF.relatorios.habilitarCopiar = function (titulo) {
         try {
@@ -38,34 +38,36 @@
         } catch (e) {}
     };
 
-    // ── Relatório do Executar (40-fases) — TSV ─────────────────────────
+    // ── Relatório do Executar (40-fases) — TSV ─────────────────────
     //
     // relStats: { totalFolhas, semMarcacoes, folgasAlteradas,
     //             folgasNaoAlteradas, irregsRestantes, interjRestantes, linhas47 }
     // relLista: [{ nome, folgasAlteradas, folgasSemAlteracao, linhas47,
     //              irregs, interj, HE, HEF, HEC, pulada }]
+    //
+    // Ordem das colunas: Folgas Mov. | Cod 47 Ajust. | Folgas Presas | Irregularidades | Interjornada
 
     AF.relatorios.gerarFolgas = function (relStats, relLista, tempoMs, cancelado) {
         var tempoTotal = Math.round(tempoMs / 1000);
         var minutos    = Math.floor(tempoTotal / 60);
         var segundos   = tempoTotal % 60;
 
-        // ── Cabeçalho corrido ──────────────────────────────────────────
+        // ── Cabeçalho corrido ────────────────────────────────────
         var rel = 'RELATORIO DE EXECUCAO\n';
         rel += 'Status: '                    + (cancelado ? 'INTERROMPIDO' : 'CONCLUIDO') + '\n';
         rel += 'Gerado em: '                 + new Date().toLocaleString('pt-BR') + '\n';
         rel += 'Tempo total: '               + minutos + 'min ' + segundos + 's\n';
         rel += 'Folhas processadas: '        + relStats.totalFolhas + '\n';
         rel += 'Folhas sem marcacoes: '      + relStats.semMarcacoes + '\n';
-        rel += 'Folgas alteradas: '          + relStats.folgasAlteradas + '\n';
-        rel += 'Folgas nao alteradas: '      + relStats.folgasNaoAlteradas + '\n';
-        rel += 'Linhas 47>48: '              + relStats.linhas47 + '\n';
+        rel += 'Folgas Mov.: '               + relStats.folgasAlteradas + '\n';
+        rel += 'Cod 47 Ajust.: '             + relStats.linhas47 + '\n';
+        rel += 'Folgas Presas: '             + relStats.folgasNaoAlteradas + '\n';
         rel += 'Irregularidades restantes: ' + relStats.irregsRestantes + '\n';
         rel += 'Interjornadas restantes: '   + relStats.interjRestantes + '\n\n';
 
-        // ── Tabela TSV ─────────────────────────────────────────────────
+        // ── Tabela TSV ─────────────────────────────────────────────
         var T = '\t';
-        rel += 'Nome' + T + 'Folgas' + T + 'Presas' + T + '47>48' + T + 'Irreg' + T + 'Interj' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%' + '\n';
+        rel += 'Nome' + T + 'Folgas Mov.' + T + 'Cod 47 Ajust.' + T + 'Folgas Presas' + T + 'Irregularidades' + T + 'Interjornada' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%' + '\n';
 
         for (var ri = 0; ri < relLista.length; ri++) {
             var re = relLista[ri];
@@ -79,28 +81,28 @@
                           re.irregs || re.interj || he !== '00:00' || hef !== '00:00';
             if (!temAlgo) continue;
 
-            rel += re.nome.trim()     + T
-                +  re.folgasAlteradas + T
+            rel += re.nome.trim()        + T
+                +  re.folgasAlteradas    + T
+                +  re.linhas47           + T
                 +  re.folgasSemAlteracao + T
-                +  re.linhas47        + T
-                +  re.irregs          + T
-                +  re.interj          + T
-                +  xls(he)            + T
-                +  xls(hef)           + T
-                +  xls(hec)           + '\n';
+                +  re.irregs             + T
+                +  re.interj             + T
+                +  xls(he)               + T
+                +  xls(hef)              + T
+                +  xls(hec)              + '\n';
         }
 
         AF.estado.relatorio     = rel;
         AF.estado.textoCopiavel = rel.replace(/\n/g, '\r\n');
         AF.relatorios.habilitarCopiar('Copiar relatorio de execucao');
 
-        // ── Log resumo ─────────────────────────────────────────────────
-        AF.core.log('──────────────────', '#374151');
+        // ── Log resumo ───────────────────────────────────────────────
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         AF.core.log('RELATORIO DE EXECUCAO', '#f9fafb');
         AF.core.log('Tempo: ' + minutos + 'min ' + segundos + 's', '#89b4fa');
-        AF.core.log('Folhas: ' + relStats.totalFolhas + ' | Folgas: ' + relStats.folgasAlteradas + ' | Presas: ' + relStats.folgasNaoAlteradas + ' | 47>48: ' + relStats.linhas47, '#89b4fa');
-        AF.core.log('Irregs restantes: ' + relStats.irregsRestantes + ' | Interj: ' + relStats.interjRestantes, '#89b4fa');
-        AF.core.log('──────────────────', '#374151');
+        AF.core.log('Folgas Mov.: ' + relStats.folgasAlteradas + ' | Cod 47 Ajust.: ' + relStats.linhas47 + ' | Folgas Presas: ' + relStats.folgasNaoAlteradas, '#89b4fa');
+        AF.core.log('Irregularidades: ' + relStats.irregsRestantes + ' | Interjornada: ' + relStats.interjRestantes, '#89b4fa');
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
 
         for (var li = 0; li < relLista.length; li++) {
             var le = relLista[li];
@@ -112,30 +114,32 @@
                            le.irregs || le.interj || lhe !== '00:00' || lhef !== '00:00';
             if (!temAlgoL) continue;
             var p = [];
-            p.push('Folgas:'  + le.folgasAlteradas);
-            p.push('Presas:'  + le.folgasSemAlteracao);
-            p.push('47>48:'   + le.linhas47);
-            p.push('Irreg:'   + le.irregs);
-            p.push('Interj:'  + le.interj);
+            p.push('Folgas Mov.:'    + le.folgasAlteradas);
+            p.push('Cod 47 Ajust.:' + le.linhas47);
+            p.push('Folgas Presas:' + le.folgasSemAlteracao);
+            p.push('Irregularidades:' + le.irregs);
+            p.push('Interjornada:'  + le.interj);
             if (lhe  !== '00:00') p.push('HE100%:'  + lhe);
             if (lhef !== '00:00') p.push('HEF100%:' + lhef);
             if (lhec !== '00:00') p.push('HEC70%:'  + lhec);
             AF.core.log('! ' + le.nome.trim() + ' | ' + p.join(' | '), '#facc15');
         }
 
-        AF.core.log('──────────────────', '#374151');
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         var linhasRel = rel.split('\n');
         for (var ki = 0; ki < linhasRel.length; ki++) {
             if (linhasRel[ki].trim()) AF.core.log(linhasRel[ki], '#6b7280');
         }
-        AF.core.log('──────────────────', '#374151');
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         AF.core.log('Relatorio pronto para copiar.', '#a3e635');
     };
 
-    // ── Relatório do Analisar (50-analisar) — TSV ──────────────────────
+    // ── Relatório do Analisar (50-analisar) — TSV ───────────────────
     //
     // stats: { totalFolhas, vazias, folgasMoviveis, irregs, interj, cod47, HEmin, HEFmin }
     // lista: [{ nome, folgas, irregs, interj, cod47, HE, HEF, HEC }]
+    //
+    // Ordem das colunas: Folgas p/ Mov. | Cod 47 p/ Ajustar | Irregularidades | Interjornada
 
     AF.relatorios.gerarAnalise = function (stats, lista, nomeMesStr, tempoMs, cancelado) {
         var tempoTotal = Math.round(tempoMs / 1000);
@@ -145,23 +149,23 @@
         var totalHEstr  = fmtMin(stats.HEmin);
         var totalHEFstr = fmtMin(stats.HEFmin);
 
-        // ── Cabeçalho corrido ──────────────────────────────────────────
+        // ── Cabeçalho corrido ────────────────────────────────────
         var rel = 'RELATORIO DE ANALISE - ' + nomeMesStr + '\n';
         rel += 'Status: '               + (cancelado ? 'INTERROMPIDO' : 'CONCLUIDO') + '\n';
         rel += 'Gerado em: '            + new Date().toLocaleString('pt-BR') + '\n';
         rel += 'Tempo total: '          + min + 'min ' + seg + 's\n';
         rel += 'Folhas analisadas: '    + (stats.totalFolhas + stats.vazias) + '\n';
         rel += 'Folhas sem marcacoes: ' + stats.vazias + '\n';
-        rel += 'Total Folgas: '         + stats.folgasMoviveis + '\n';
-        rel += 'Total Irreg: '          + stats.irregs + '\n';
-        rel += 'Total Interj: '         + stats.interj + '\n';
-        rel += 'Total Cod47: '          + stats.cod47 + '\n';
-        rel += 'Total HE100%: '         + totalHEstr + '\n';
-        rel += 'Total HEF100%: '        + totalHEFstr + '\n\n';
+        rel += 'Total Folgas p/ Mov.: '      + stats.folgasMoviveis + '\n';
+        rel += 'Total Cod 47 p/ Ajustar: '   + stats.cod47 + '\n';
+        rel += 'Total Irregularidades: '     + stats.irregs + '\n';
+        rel += 'Total Interjornada: '        + stats.interj + '\n';
+        rel += 'Total HE100%: '              + totalHEstr + '\n';
+        rel += 'Total HEF100%: '             + totalHEFstr + '\n\n';
 
-        // ── Tabela TSV ─────────────────────────────────────────────────
+        // ── Tabela TSV ─────────────────────────────────────────────
         var T = '\t';
-        rel += 'Nome' + T + 'Folgas' + T + 'Irreg' + T + 'Interj' + T + 'Cod47' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%' + '\n';
+        rel += 'Nome' + T + 'Folgas p/ Mov.' + T + 'Cod 47 p/ Ajustar' + T + 'Irregularidades' + T + 'Interjornada' + T + 'HE100%' + T + 'HEF100%' + T + 'HEC70%' + '\n';
 
         for (var ri = 0; ri < lista.length; ri++) {
             var re = lista[ri];
@@ -177,9 +181,9 @@
 
             rel += re.nome.trim() + T
                 +  folgas         + T
+                +  cod47          + T
                 +  irregs         + T
                 +  interj         + T
-                +  cod47          + T
                 +  xls(he)        + T
                 +  xls(hef)       + T
                 +  xls(hec)       + '\n';
@@ -189,7 +193,7 @@
         AF.estado.textoCopiavel = rel.replace(/\n/g, '\r\n');
         AF.relatorios.habilitarCopiar('Copiar relatorio de analise');
 
-        // ── Log resumo por pessoa ──────────────────────────────────────
+        // ── Log resumo por pessoa ─────────────────────────────────
         for (var li = 0; li < lista.length; li++) {
             var le = lista[li];
             if (!le.nome || !le.nome.trim()) continue;
@@ -201,29 +205,29 @@
             var lhef = normHora(le.HEF);
             var lhec = normHora(le.HEC);
             var p = [];
-            if (lf)               p.push('Folgas:'  + lf);
-            p.push('Irreg:'   + li2);
-            p.push('Interj:'  + lt);
-            if (lc)               p.push('Cod47:'   + lc);
+            if (lf) p.push('Folgas p/ Mov.:'     + lf);
+            if (lc) p.push('Cod 47 p/ Ajustar:' + lc);
+            p.push('Irregularidades:' + li2);
+            p.push('Interjornada:'    + lt);
             if (lhe  !== '00:00') p.push('HE100%:'  + lhe);
             if (lhef !== '00:00') p.push('HEF100%:' + lhef);
             if (lhec !== '00:00') p.push('HEC70%:'  + lhec);
             AF.core.log('! ' + le.nome.trim() + ' | ' + p.join(' | '), '#facc15');
         }
 
-        // ── Log encerramento + texto copiável ──────────────────────────
-        AF.core.log('──────────────────', '#374151');
+        // ── Log encerramento + texto copiável ────────────────────────
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         AF.core.log('ANALISE CONCLUIDA', '#f9fafb');
         AF.core.log('Tempo: ' + min + 'min ' + seg + 's', '#89b4fa');
-        AF.core.log('Folhas: ' + (stats.totalFolhas + stats.vazias) + ' | Folgas: ' + stats.folgasMoviveis + ' | Irreg: ' + stats.irregs + ' | Interj: ' + stats.interj + ' | Cod47: ' + stats.cod47, '#89b4fa');
+        AF.core.log('Folgas p/ Mov.: ' + stats.folgasMoviveis + ' | Cod 47 p/ Ajustar: ' + stats.cod47 + ' | Irregularidades: ' + stats.irregs + ' | Interjornada: ' + stats.interj, '#89b4fa');
         AF.core.log('HE100%: ' + totalHEstr + ' | HEF100%: ' + totalHEFstr, '#89b4fa');
-        AF.core.log('──────────────────', '#374151');
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
 
         var linhasRel = rel.split('\n');
         for (var ki = 0; ki < linhasRel.length; ki++) {
             if (linhasRel[ki].trim()) AF.core.log(linhasRel[ki], '#6b7280');
         }
-        AF.core.log('──────────────────', '#374151');
+        AF.core.log('\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500', '#374151');
         AF.core.log('Relatorio pronto para copiar.', '#a3e635');
     };
 
