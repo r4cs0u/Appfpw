@@ -14,7 +14,7 @@
         return domingo || disponiveis[0] || null;
     }
 
-    // ── Análise da folha atual ────────────────────────────────────
+    // ── Análise da folha atual ──────────────────────────────────────────
     // Filtra por mes alvo + semana de transição do ultimo mes
 
     AF.fases.analisarFolha = function () {
@@ -51,7 +51,7 @@
         return { marc: marc, he: he, smES: smES, interj: interj, vazia: false };
     };
 
-    // ── Fase 1 ───────────────────────────────────────────────────────
+    // ── Fase 1 ─────────────────────────────────────────────────────────
 
     AF.fases.planejarFase1 = function (mapa) {
         var acoes = [];
@@ -104,7 +104,7 @@
         return { movidas: movidas, presas: presas };
     };
 
-    // ── Fase 2 ───────────────────────────────────────────────────────
+    // ── Fase 2 ─────────────────────────────────────────────────────────
 
     AF.fases.planejarFase2Rodada = function (mapa, historicoTentativas, datasUsadasFase2) {
         var ultimaSemanaId = mapa.ultimaSemanaId || AF.utils.semanaIdBR(new Date(mapa.alvo.getFullYear(), mapa.alvo.getMonth() + 1, 0));
@@ -188,7 +188,7 @@
         return { movidas: movidas, presas: presas };
     };
 
-    // ── Fase 3 ───────────────────────────────────────────────────────
+    // ── Fase 3 ─────────────────────────────────────────────────────────
     // Gatilho: folga presa após Fase 1 + Fase 2.
     // Escopo: semana da folga presa.
     // numAbrirPopup: usa ausenciasMes[0] se disponível, senão usa numFolga da presa.
@@ -260,10 +260,16 @@
         return { acoes: acoes, presasFinais: presasFinais };
     };
 
-    // ── Alterar 47 → 48 ──────────────────────────────────────────────
+    // ── Fase 4: Alterar 47 → 48 ────────────────────────────────────────
+    // Escopo: mês alvo + última semana (igual ao mapa).
+    // Log: Fase 4: DD/MM/AAAA | 47 → 48
 
-	AF.fases.alterar47para48 = function () {
-		var doc1 = AF.core.getDoc1();
+	AF.fases.processarFase4 = function () {
+		var doc1   = AF.core.getDoc1();
+		var alvo   = AF.utils.mesAlvoDaTabela();
+		var ultimoDia = new Date(alvo.getFullYear(), alvo.getMonth() + 1, 0);
+		var ultimaSemanaId = AF.utils.semanaIdBR(ultimoDia);
+
 		var nsMarcados = [];
 		var campos = Array.from(doc1.querySelectorAll('input[type=text]'));
 
@@ -271,22 +277,29 @@
 			var inp = campos[i];
 			if (!inp.value || inp.value.trim() !== '47') continue;
 
+			// Filtro de escopo: mes alvo ou última semana
+			var dataStr = AF.mapa.obterDataDoInput(inp);
+			var dataObj = AF.utils.parseDataBR(dataStr);
+			if (!dataObj) continue;
+			var semId = AF.utils.semanaIdBR(dataObj);
+			var noEscopo = AF.utils.ehMesAlvo(dataObj, alvo) || semId === ultimaSemanaId;
+			if (!noEscopo) continue;
+
 			var num = (inp.name || '').replace(/\D/g, '');
 			var tr = inp.closest('tr');
 			if (!tr) continue;
 
 			var sel = tr.querySelector('select[name="lstNome' + num + '"]');
 			if (!sel) {
-				AF.core.log('select não achado linha ' + num, '#f9e2af');
+				AF.core.log('Fase 4: select nao achado para ' + (dataStr || num), '#f9e2af');
 				continue;
 			}
 
 			var opt48 = Array.from(sel.options).find(function (o) {
 				return o.value === '48';
 			});
-
 			if (!opt48) {
-				AF.core.log('opção 48 não existe linha ' + num, '#f9e2af');
+				AF.core.log('Fase 4: opcao 48 nao existe para ' + (dataStr || num), '#f9e2af');
 				continue;
 			}
 
@@ -300,7 +313,6 @@
 			sel.dispatchEvent(new Event('change', { bubbles: true }));
 			sel.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
 			sel.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-
 			sel.dispatchEvent(new Event('blur', { bubbles: true }));
 
 			var rad = doc1.querySelector('[name="radConfirma"]');
@@ -317,13 +329,13 @@
 			nsMarcados.push(num);
 
 			var cod = doc1.querySelector('[name="CodJust' + num + '"]');
-			AF.core.log('47>48 linha ' + num + ' | lstNome: ' + sel.value + ' | CodJust: ' + (cod ? cod.value : '-'), '#f9e2af');
+			AF.core.log('Fase 4: ' + dataStr + ' | 47 → 48 | CodJust: ' + (cod ? cod.value : '-'), '#f9e2af');
 		}
 
 		return nsMarcados;
 	};
 
-    // ── Gravar ───────────────────────────────────────────────────────────
+    // ── Gravar ─────────────────────────────────────────────────────────
 
 	AF.fases.gravar = async function (nsMarcados) {
 	    try {
@@ -370,7 +382,7 @@
     await AF.core.esperar(5000);
 };
 
-    // ── Processar folha atual ───────────────────────────────────────
+    // ── Processar folha atual ──────────────────────────────────────────
 
     AF.fases.processarFolhaAtual = async function (relStats, relLista) {
         var nome = AF.core.nomeAtual();
@@ -407,14 +419,14 @@
 
         if (AF.estado.cancelado) return;
 
-        var nsMarcados = AF.fases.alterar47para48();
+        var nsMarcados = AF.fases.processarFase4();
         var linhas47 = nsMarcados.length;
 
 		if (linhas47 > 0) {
-		    AF.core.log('Gravando linhas 47>48...', '#89b4fa');
+		    AF.core.log('Gravando Fase 4...', '#89b4fa');
 		    await AF.fases.gravar(nsMarcados);
 		} else {
-		    AF.core.log('Nada a gravar.', '#4b5563');
+		    AF.core.log('Fase 4: nada a alterar.', '#4b5563');
 		}
 		
 		if (AF.estado.cancelado) return;
@@ -446,7 +458,7 @@
         AF.core.log('Folha concluida | Folgas: ' + totalMovidas + ' | Presas: ' + presasFinais.length + ' | 47>48: ' + linhas47 + ' | HE100%: ' + extras.HE + ' | HEF100%: ' + extras.HEF + ' | HEC70%: ' + saldoHEC, '#a6e3a1');
     };
 
-    // ── processarTodas — loop principal ─────────────────────────────────
+    // ── processarTodas — loop principal ───────────────────────────────
 
     AF.fases.processarTodas = async function () {
         AF.estado.cancelado = false;
